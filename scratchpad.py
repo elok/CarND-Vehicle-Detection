@@ -1,10 +1,16 @@
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import glob
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+import time
+from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
-from util import color_hist, plot3d, bin_spatial, data_look, get_hog_features, extract_features
+# NOTE: the next import is only valid
+# for scikit-learn version <= 0.17
+# if you are using scikit-learn >= 0.18 then use this:
+# from sklearn.model_selection import train_test_split
+from sklearn.cross_validation import train_test_split
 
 def test_histogram():
     image = cv2.imread(r'vehicles/GTI_Far/image0001.png')
@@ -125,66 +131,113 @@ def test_hog():
     plt.title('HOG Visualization')
     plt.show()
 
-def test_extract_features():
-    # Read in our vehicles and non-vehicles
-    car_images = []
-    noncar_images = []
+# Define a function to compute binned color features
+def bin_spatial(img, size=(32, 32)):
+    # Use cv2.resize().ravel() to create the feature vector
+    features = cv2.resize(img, size).ravel()
+    # Return the feature vector
+    return features
 
+# Define a function to extract features from a list of images
+# Have this function call bin_spatial() and color_hist()
+def extract_features(imgs, cspace='RGB', spatial_size=(32, 32),
+                        hist_bins=32, hist_range=(0, 256)):
+    # Create a list to append feature vectors to
+    features = []
+    # Iterate through the list of images
+    for file in imgs:
+        # Read in each one by one
+        image = mpimg.imread(file)
+        # apply color conversion if other than 'RGB'
+        if cspace != 'RGB':
+            if cspace == 'HSV':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+            elif cspace == 'LUV':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
+            elif cspace == 'HLS':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+            elif cspace == 'YUV':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+        else: feature_image = np.copy(image)
+        # Apply bin_spatial() to get spatial color features
+        spatial_features = bin_spatial(feature_image, size=spatial_size)
+        # Apply color_hist() also with a color space option now
+        hist_features = color_hist(feature_image, nbins=hist_bins, bins_range=hist_range)
+        # Append the new feature vector to the features list
+        features.append(np.concatenate((spatial_features, hist_features)))
+    # Return list of feature vectors
+    return features
+
+# Define a function to compute color histogram features
+def color_hist(img, nbins=32, bins_range=(0, 256)):
+    # Compute the histogram of the color channels separately
+    channel1_hist = np.histogram(img[:,:,0], bins=nbins, range=bins_range)
+    channel2_hist = np.histogram(img[:,:,1], bins=nbins, range=bins_range)
+    channel3_hist = np.histogram(img[:,:,2], bins=nbins, range=bins_range)
+    # Concatenate the histograms into a single feature vector
+    hist_features = np.concatenate((channel1_hist[0], channel2_hist[0], channel3_hist[0]))
+    # Return the individual histograms, bin_centers and feature vector
+    return hist_features
+
+def test_extract_features():
+    # Read in car and non-car images
+    # images = glob.glob('*.jpeg')
+    cars = []
+    notcars = []
     # cars
     images = glob.glob('vehicles/**/*.png', recursive=True)  # cars
     for image in images:
-        car_images.append(image)
-        break
+        cars.append(image)
 
     # non-cars
     images = glob.glob('non-vehicles/**/*.png', recursive=True)  # noncars
     for image in images:
-        noncar_images.append(image)
-        break
+        notcars.append(image)
 
-    no_of_images = [len(car_images), len(noncar_images)]
-    print(no_of_images)
+    # TODO play with these values to see how your classifier
+    # performs under different binning scenarios
+    spatial = 32
+    histbin = 32
 
-    colorspace = 'YUV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-    orient = 12
-    pix_per_cell = 16
-    cell_per_block = 2
-    hog_channel = 'ALL'  # Can be 0, 1, 2, or "ALL"
+    car_features = extract_features(cars, cspace='RGB', spatial_size=(spatial, spatial),
+                                    hist_bins=histbin, hist_range=(0, 256))
+    notcar_features = extract_features(notcars, cspace='RGB', spatial_size=(spatial, spatial),
+                                       hist_bins=histbin, hist_range=(0, 256))
 
-    car_features = extract_features(car_images, cspace=colorspace, orient=orient,
-                                    pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
-                                    hog_channel=hog_channel)
+    # Create an array stack of feature vectors
+    X = np.vstack((car_features, notcar_features)).astype(np.float64)
+    # Fit a per-column scaler
+    X_scaler = StandardScaler().fit(X)
+    # Apply the scaler to X
+    scaled_X = X_scaler.transform(X)
 
-    notcar_features = extract_features(noncar_images, cspace=colorspace, orient=orient,
-                                       pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
-                                       hog_channel=hog_channel)
+    # Define the labels vector
+    y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
 
-    # car_features = extract_features(cars, cspace='RGB', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256))
-    # notcar_features = extract_features(notcars, cspace='RGB', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256))
+    # Split up data into randomized training and test sets
+    rand_state = np.random.randint(0, 100)
+    X_train, X_test, y_train, y_test = train_test_split(
+        scaled_X, y, test_size=0.2, random_state=rand_state)
 
-    if len(car_features) > 0:
-        # Create an array stack of feature vectors
-        X = np.vstack((car_features, notcar_features)).astype(np.float64)
-        # Fit a per-column scaler
-        X_scaler = StandardScaler().fit(X)
-        # Apply the scaler to X
-        scaled_X = X_scaler.transform(X)
-        car_ind = np.random.randint(0, len(car_images))
-        # Plot an example of raw and scaled features
-        fig = plt.figure(figsize=(12, 4))
-        plt.subplot(131)
-        plt.imshow(mpimg.imread(car_images[car_ind]))
-        plt.title('Original Image')
-        plt.subplot(132)
-        plt.plot(X[car_ind])
-        plt.title('Raw Features')
-        plt.subplot(133)
-        plt.plot(scaled_X[car_ind])
-        plt.title('Normalized Features')
-        fig.tight_layout()
-        plt.show()
-    else:
-        print('Your function only returns empty feature vectors...')
+    print('Using spatial binning of:', spatial,
+          'and', histbin, 'histogram bins')
+    print('Feature vector length:', len(X_train[0]))
+    # Use a linear SVC
+    svc = LinearSVC()
+    # Check the training time for the SVC
+    t = time.time()
+    svc.fit(X_train, y_train)
+    t2 = time.time()
+    print(round(t2 - t, 2), 'Seconds to train SVC...')
+    # Check the score of the SVC
+    print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
+    # Check the prediction time for a single sample
+    t = time.time()
+    n_predict = 10
+    print('My SVC predicts: ', svc.predict(X_test[0:n_predict]))
+    print('For these', n_predict, 'labels: ', y_test[0:n_predict])
+    t2 = time.time()
+    print(round(t2 - t, 5), 'Seconds to predict', n_predict, 'labels with SVC')
 
 if __name__ == '__main__':
     # test_histogram()
