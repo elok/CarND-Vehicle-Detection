@@ -127,26 +127,40 @@ def test_hog():
 
 def test_extract_features():
     # Read in our vehicles and non-vehicles
-    cars = []
-    notcars = []
+    car_images = []
+    noncar_images = []
 
     # cars
     images = glob.glob('vehicles/**/*.png', recursive=True)  # cars
     for image in images:
-        cars.append(image)
+        car_images.append(image)
         break
 
     # non-cars
     images = glob.glob('non-vehicles/**/*.png', recursive=True)  # noncars
     for image in images:
-        notcars.append(image)
+        noncar_images.append(image)
         break
 
-    no_of_images = [len(cars), len(notcars)]
+    no_of_images = [len(car_images), len(noncar_images)]
     print(no_of_images)
 
-    car_features = extract_features(cars, cspace='RGB', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256))
-    notcar_features = extract_features(notcars, cspace='RGB', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256))
+    colorspace = 'YUV'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+    orient = 12
+    pix_per_cell = 16
+    cell_per_block = 2
+    hog_channel = 'ALL'  # Can be 0, 1, 2, or "ALL"
+
+    car_features = extract_features(car_images, cspace=colorspace, orient=orient,
+                                    pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
+                                    hog_channel=hog_channel)
+
+    notcar_features = extract_features(noncar_images, cspace=colorspace, orient=orient,
+                                       pix_per_cell=pix_per_cell, cell_per_block=cell_per_block,
+                                       hog_channel=hog_channel)
+
+    # car_features = extract_features(cars, cspace='RGB', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256))
+    # notcar_features = extract_features(notcars, cspace='RGB', spatial_size=(32, 32), hist_bins=32, hist_range=(0, 256))
 
     if len(car_features) > 0:
         # Create an array stack of feature vectors
@@ -155,11 +169,11 @@ def test_extract_features():
         X_scaler = StandardScaler().fit(X)
         # Apply the scaler to X
         scaled_X = X_scaler.transform(X)
-        car_ind = np.random.randint(0, len(cars))
+        car_ind = np.random.randint(0, len(car_images))
         # Plot an example of raw and scaled features
         fig = plt.figure(figsize=(12, 4))
         plt.subplot(131)
-        plt.imshow(mpimg.imread(cars[car_ind]))
+        plt.imshow(mpimg.imread(car_images[car_ind]))
         plt.title('Original Image')
         plt.subplot(132)
         plt.plot(X[car_ind])
