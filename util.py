@@ -51,14 +51,14 @@ def color_hist(img, nbins=32, bins_range=(0, 256)):
 def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
                      hist_bins=32, orient=9,
                      pix_per_cell=8, cell_per_block=2, hog_channel=0,
-                     spatial_feat=True, hist_feat=True, hog_feat=True):
+                     spatial_feat=True, hist_feat=True, hog_feat=True, bins_range=(0, 256)):
     # Create a list to append feature vectors to
     features = []
     # Iterate through the list of images
-    for file in imgs:
+    for file_name in imgs:
         file_features = []
         # Read in each one by one
-        image = mpimg.imread(file)
+        image = mpimg.imread(file_name)
         # apply color conversion if other than 'RGB'
         if color_space != 'RGB':
             if color_space == 'HSV':
@@ -79,7 +79,7 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
             file_features.append(spatial_features)
         if hist_feat == True:
             # Apply color_hist()
-            hist_features = color_hist(feature_image, nbins=hist_bins)
+            hist_features = color_hist(feature_image, nbins=hist_bins, bins_range=bins_range)
             file_features.append(hist_features)
         if hog_feat == True:
             # Call get_hog_features() with vis=False, feature_vec=True

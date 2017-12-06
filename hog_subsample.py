@@ -20,9 +20,16 @@ from sklearn.svm import LinearSVC
 # hist_bins = dist_pickle["hist_bins"]
 
 
-def train_and_return_svc():
+def train_and_return_svc(spatial, histbin, color_space):
+    """
+
+    :param spatial: (32, 32)
+    :param histbin: 32
+    :return:
+    """
+    # -------------------------------------------
     # Read in car and non-car images
-    # images = glob.glob('*.jpeg')
+    # -------------------------------------------
     cars = []
     notcars = []
     # cars
@@ -37,11 +44,13 @@ def train_and_return_svc():
 
     # TODO play with these values to see how your classifier
     # performs under different binning scenarios
-    spatial = 32
-    histbin = 32
+    # spatial = 32
+    # histbin = 32
 
-    car_features = extract_features(cars, color_space='RGB', spatial_size=(spatial, spatial), hist_bins=histbin)
-    notcar_features = extract_features(notcars, color_space='RGB', spatial_size=(spatial, spatial), hist_bins=histbin)
+    car_features = extract_features(cars, color_space=color_space, spatial_size=spatial,
+                                    hist_bins=histbin, bins_range=(0,1))
+    notcar_features = extract_features(notcars, color_space=color_space, spatial_size=spatial,
+                                       hist_bins=histbin, bins_range=(0,1))
 
     # Create an array stack of feature vectors
     X = np.vstack((car_features, notcar_features)).astype(np.float64)
@@ -55,11 +64,9 @@ def train_and_return_svc():
 
     # Split up data into randomized training and test sets
     rand_state = np.random.randint(0, 100)
-    X_train, X_test, y_train, y_test = train_test_split(
-        scaled_X, y, test_size=0.2, random_state=rand_state)
+    X_train, X_test, y_train, y_test = train_test_split(scaled_X, y, test_size=0.2, random_state=rand_state)
 
-    print('Using spatial binning of:', spatial,
-          'and', histbin, 'histogram bins')
+    print('Using spatial binning of:', spatial, 'and', histbin, 'histogram bins')
     print('Feature vector length:', len(X_train[0]))
     # Use a linear SVC
     svc = LinearSVC()
@@ -86,7 +93,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     img = img.astype(np.float32) / 255
 
     img_tosearch = img[ystart:ystop, :, :]
-    ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
+    ctrans_tosearch = convert_color(img_tosearch, conv=CONVERT_COLOR_SPACE)
     if scale != 1:
         imshape = ctrans_tosearch.shape
         ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1] / scale), np.int(imshape[0] / scale)))
@@ -150,22 +157,29 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
 img = mpimg.imread(r'test_images/test1.jpg')
 
+COLOR_SPACE = 'RGB'
+CONVERT_COLOR_SPACE = 'RGB2YCrCb'
+
 ystart = 400
 ystop = 656
-scale = 1.5
+scale = 1
 
-dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
-svc = dist_pickle["svc"]
-X_scaler = dist_pickle["scaler"]
+# dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
+# svc = dist_pickle["svc"]
+# X_scaler = dist_pickle["scaler"]
 orient = 9
 pix_per_cell = 8
 cell_per_block = 2
 spatial_size = (32, 32)
 hist_bins = 32
 
-# svc, X_scaler = train_and_return_svc()
+svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE)
+svc_pickle = {}
+svc_pickle['svc'] = svc
+svc_pickle['scaler'] = X_scaler
+pickle.dump(svc_pickle, open("svc_pickle.p", "wb"))
 
-out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
-                    hist_bins)
+out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
+                    spatial_size, hist_bins)
 
 plt.imshow(out_img)
