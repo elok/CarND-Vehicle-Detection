@@ -100,10 +100,8 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
     return features
 
 
-# Define a function that takes an image,
-# start and stop positions in both x and y,
-# window size (x and y dimensions),
-# and overlap fraction (for both x and y)
+# Define a function that takes an image, start and stop positions in both x and y,
+# window size (x and y dimensions), and overlap fraction (for both x and y)
 def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
                  xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
     # If x and/or y start/stop positions not defined, set to image size
@@ -128,9 +126,8 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
     ny_windows = np.int((yspan - ny_buffer) / ny_pix_per_step)
     # Initialize a list to append window positions to
     window_list = []
-    # Loop through finding x and y window positions
-    # Note: you could vectorize this step, but in practice
-    # you'll be considering windows one by one with your
+    # Loop through finding x and y window positions.
+    # Note: you could vectorize this step, but in practice you'll be considering windows one by one with your
     # classifier, so looping makes sense
     for ys in range(ny_windows):
         for xs in range(nx_windows):

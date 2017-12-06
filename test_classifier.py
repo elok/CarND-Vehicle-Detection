@@ -174,8 +174,7 @@ t = time.time()
 image = mpimg.imread(r'test_images/test1.jpg')
 draw_image = np.copy(image)
 
-# Uncomment the following line if you extracted training
-# data from .png images (scaled 0 to 1 by mpimg) and the
+# Uncomment the following line if you extracted training data from .png images (scaled 0 to 1 by mpimg) and the
 # image you are searching is a .jpg (scaled 0 to 255)
 # image = image.astype(np.float32)/255
 
@@ -189,6 +188,7 @@ hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_sp
                              hog_channel=hog_channel, spatial_feat=spatial_feat,
                              hist_feat=hist_feat, hog_feat=hog_feat)
 
-window_img = draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
+window_img = draw_boxes(draw_image, windows, color=(0, 0, 255), thick=6)
 
 plt.imshow(window_img)
+plt.show()
