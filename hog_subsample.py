@@ -139,6 +139,10 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
             spatial_features = bin_spatial(subimg, size=spatial_size)
             hist_features = color_hist(subimg, nbins=hist_bins)
 
+            print(spatial_features.shape)
+            print(hist_features.shape)
+            print(hog_features.shape)
+
             # Scale features and make a prediction
             test_features = X_scaler.transform(
                 np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
@@ -154,30 +158,34 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
     return draw_img
 
-
-img = mpimg.imread(r'test_images/test1.jpg')
-
-COLOR_SPACE = 'RGB'
+COLOR_SPACE = 'YCrCb'
 CONVERT_COLOR_SPACE = 'RGB2YCrCb'
 
 ystart = 400
 ystop = 656
 scale = 1
 
-# dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
-# svc = dist_pickle["svc"]
-# X_scaler = dist_pickle["scaler"]
 orient = 9
 pix_per_cell = 8
 cell_per_block = 2
 spatial_size = (32, 32)
 hist_bins = 32
 
-svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE)
-svc_pickle = {}
-svc_pickle['svc'] = svc
-svc_pickle['scaler'] = X_scaler
-pickle.dump(svc_pickle, open("svc_pickle.p", "wb"))
+cache = True
+if cache:
+    svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE)
+    svc_pickle = {}
+    svc_pickle['svc'] = svc
+    svc_pickle['scaler'] = X_scaler
+    pickle.dump(svc_pickle, open("svc_pickle.p", "wb"))
+else:
+    dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
+    svc = dist_pickle["svc"]
+    X_scaler = dist_pickle["scaler"]
+
+
+
+img = mpimg.imread(r'test_images/test1.jpg')
 
 out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
                     spatial_size, hist_bins)
