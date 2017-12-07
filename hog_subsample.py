@@ -164,10 +164,12 @@ scale = 1
 orient = 9
 pix_per_cell = 8
 cell_per_block = 2
+# While it could be cumbersome to include three color channels of a full resolution image, you can perform spatial
+# binning on an image and still retain enough information to help in finding vehicles.
 spatial_size = (32, 32)
 hist_bins = 32
 
-cache = False
+cache = True
 if cache:
     svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE)
     svc_pickle = {}
