@@ -137,9 +137,9 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
             spatial_features = bin_spatial(subimg, size=spatial_size)
             hist_features = color_hist(subimg, nbins=hist_bins)
 
-            print(spatial_features.shape)
-            print(hist_features.shape)
-            print(hog_features.shape)
+            print(spatial_features.shape)  # 3072
+            print(hist_features.shape)     # 96
+            print(hog_features.shape)      # 5292
 
             # Scale features and make a prediction
             test_features = X_scaler.transform(
