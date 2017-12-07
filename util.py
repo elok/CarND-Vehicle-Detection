@@ -58,9 +58,11 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32), hist_bins=3
         # image = mpimg.imread(file_name)
         image = cv2.imread(file_name)
 
-        # apply color conversion if other than 'RGB'
-        if color_space != 'RGB':
-            if color_space == 'HSV':
+        # apply color conversion if other than 'BGR'
+        if color_space != 'BGR':
+            if color_space == 'RGB':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            elif color_space == 'HSV':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             elif color_space == 'LUV':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_BGR2LUV)

@@ -47,8 +47,10 @@ def train_and_return_svc(spatial, histbin, color_space):
     # spatial = 32
     # histbin = 32
 
-    car_features = extract_features(cars, color_space=color_space, spatial_size=spatial, hist_bins=histbin)
-    notcar_features = extract_features(notcars, color_space=color_space, spatial_size=spatial, hist_bins=histbin)
+    car_features = extract_features(cars, color_space=color_space, spatial_size=spatial, hist_bins=histbin,
+                                    hog_channel='ALL')
+    notcar_features = extract_features(notcars, color_space=color_space, spatial_size=spatial, hist_bins=histbin,
+                                       hog_channel='ALL')
 
     # Create an array stack of feature vectors
     X = np.vstack((car_features, notcar_features)).astype(np.float64)
@@ -152,7 +154,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
                 ytop_draw = np.int(ytop * scale)
                 win_draw = np.int(window * scale)
                 cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
-                              (xbox_left + win_draw, ytop_draw + win_draw + ystart), (0, 0, 255), 6)
+                              (xbox_left + win_draw, ytop_draw + win_draw + ystart), (255, 0, 0), 6)
 
     return draw_img
 
@@ -169,7 +171,7 @@ cell_per_block = 2
 spatial_size = (32, 32)
 hist_bins = 32
 
-cache = True
+cache = False
 if cache:
     svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE)
     svc_pickle = {}
@@ -188,4 +190,6 @@ img = cv2.imread(r'test_images/test1.jpg')
 out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
                     spatial_size, hist_bins)
 
-plt.imshow(out_img)
+# plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_YCrCb2BGR))
+plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+plt.show()
