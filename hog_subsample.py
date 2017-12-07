@@ -47,10 +47,8 @@ def train_and_return_svc(spatial, histbin, color_space):
     # spatial = 32
     # histbin = 32
 
-    car_features = extract_features(cars, color_space=color_space, spatial_size=spatial,
-                                    hist_bins=histbin, bins_range=(0,1))
-    notcar_features = extract_features(notcars, color_space=color_space, spatial_size=spatial,
-                                       hist_bins=histbin, bins_range=(0,1))
+    car_features = extract_features(cars, color_space=color_space, spatial_size=spatial, hist_bins=histbin)
+    notcar_features = extract_features(notcars, color_space=color_space, spatial_size=spatial, hist_bins=histbin)
 
     # Create an array stack of feature vectors
     X = np.vstack((car_features, notcar_features)).astype(np.float64)
@@ -90,7 +88,7 @@ def train_and_return_svc(spatial, histbin, color_space):
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
     draw_img = np.copy(img)
-    img = img.astype(np.float32) / 255
+    # img = img.astype(np.float32) / 255
 
     img_tosearch = img[ystart:ystop, :, :]
     ctrans_tosearch = convert_color(img_tosearch, conv=CONVERT_COLOR_SPACE)
@@ -159,7 +157,7 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     return draw_img
 
 COLOR_SPACE = 'YCrCb'
-CONVERT_COLOR_SPACE = 'RGB2YCrCb'
+CONVERT_COLOR_SPACE = 'BGR2YCrCb'
 
 ystart = 400
 ystop = 656
@@ -185,7 +183,7 @@ else:
 
 
 
-img = mpimg.imread(r'test_images/test1.jpg')
+img = cv2.imread(r'test_images/test1.jpg')
 
 out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
                     spatial_size, hist_bins)
