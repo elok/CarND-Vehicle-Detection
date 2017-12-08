@@ -191,6 +191,16 @@ def draw_boxes(img, bbox_list):
         cv2.rectangle(draw_img, box[0], box[1], (255, 0, 0), 6)
     return draw_img
 
+def add_thumbnail(img, thumb_img, scale=0.3, x_offset=10, y_offset=10):
+    draw_img = np.copy(img)
+
+    thumb_img_3_channels = np.dstack((thumb_img, thumb_img, thumb_img)).astype(np.uint8) / 255
+
+    resized_thumb_img = cv2.resize(thumb_img_3_channels, (0, 0), fx=scale, fy=scale)
+
+    draw_img[y_offset:y_offset + resized_thumb_img.shape[0], x_offset:x_offset + resized_thumb_img.shape[1]] = resized_thumb_img
+    return draw_img
+
 COLOR_SPACE = 'YUV'
 CONVERT_COLOR_SPACE = 'BGR2YUV'
 
@@ -243,10 +253,29 @@ for img_path in images:
     heatmap = np.clip(heat, 0, 255)
     # Find final boxes from heatmap using label function
     labels = label(heatmap)
+
+    # NEW
+    # overlay_img = add_thumbnail(img, thumb_img=labels[0])
+    # print(labels[1], 'cars found')
+    # plt.imshow(labels[0], cmap='hot')
+    # plt.show()
+
     out_img = draw_labeled_bboxes(np.copy(img), labels)
 
     # Save image
     cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
 
-    plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+    # plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+    # plt.show()
+
+    fig = plt.figure()
+    plt.subplot(121)
+    plt.imshow(out_img)
+    plt.title('Car Positions')
+    plt.subplot(122)
+    plt.imshow(heatmap, cmap='hot')
+    plt.title('Heat Map')
+    fig.tight_layout()
     plt.show()
+
+    break
