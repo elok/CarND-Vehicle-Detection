@@ -162,3 +162,5 @@ def convert_color(img, conv='RGB2YCrCb'):
         return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
     if conv == 'RGB2LUV':
         return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
+    if conv == 'BGR2YUV':
+        return cv2.cvtColor(img, cv2.COLOR_BGR2YUV)

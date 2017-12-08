@@ -20,7 +20,7 @@ from sklearn.svm import LinearSVC
 # hist_bins = dist_pickle["hist_bins"]
 
 
-def train_and_return_svc(spatial, histbin, color_space):
+def train_and_return_svc(spatial, histbin, color_space, hog_channel):
     """
 
     :param spatial: (32, 32)
@@ -48,9 +48,9 @@ def train_and_return_svc(spatial, histbin, color_space):
     # histbin = 32
 
     car_features = extract_features(cars, color_space=color_space, spatial_size=spatial, hist_bins=histbin,
-                                    hog_channel='ALL')
+                                    hog_channel=hog_channel)
     notcar_features = extract_features(notcars, color_space=color_space, spatial_size=spatial, hist_bins=histbin,
-                                       hog_channel='ALL')
+                                       hog_channel=hog_channel)
 
     # Create an array stack of feature vectors
     X = np.vstack((car_features, notcar_features)).astype(np.float64)
@@ -88,7 +88,8 @@ def train_and_return_svc(spatial, histbin, color_space):
     return svc, X_scaler
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
-def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
+def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
+              hist_bins, hog_channel):
     draw_img = np.copy(img)
     # img = img.astype(np.float32) / 255
 
@@ -123,11 +124,16 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
         for yb in range(nysteps):
             ypos = yb * cells_per_step
             xpos = xb * cells_per_step
+
             # Extract HOG for this patch
-            hog_feat1 = hog1[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
-            hog_feat2 = hog2[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
-            hog_feat3 = hog3[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
-            hog_features = np.hstack((hog_feat1, hog_feat2, hog_feat3))
+            if hog_channel == 'ALL':
+                hog_feat1 = hog1[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
+                hog_feat2 = hog2[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
+                hog_feat3 = hog3[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
+                hog_features = np.hstack((hog_feat1, hog_feat2, hog_feat3))
+            else:
+                hog_features = get_hog_features(ctrans_tosearch[:, :, hog_channel], orient,
+                                                pix_per_cell, cell_per_block, vis=False, feature_vec=True)
 
             xleft = xpos * pix_per_cell
             ytop = ypos * pix_per_cell
@@ -154,24 +160,26 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
 
     return draw_img
 
-COLOR_SPACE = 'YCrCb'
-CONVERT_COLOR_SPACE = 'BGR2YCrCb'
+COLOR_SPACE = 'YUV'
+CONVERT_COLOR_SPACE = 'BGR2YUV'
 
 ystart = 400
 ystop = 656
 scale = 1
 
-orient = 9
-pix_per_cell = 8
+orient = 11
+pix_per_cell = 16
 cell_per_block = 2
 # While it could be cumbersome to include three color channels of a full resolution image, you can perform spatial
 # binning on an image and still retain enough information to help in finding vehicles.
 spatial_size = (32, 32)
 hist_bins = 32
+hog_channel = 'ALL'
 
-cache = True
+cache = False
 if cache:
-    svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE)
+    svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE,
+                                         hog_channel=hog_channel)
     svc_pickle = {}
     svc_pickle['svc'] = svc
     svc_pickle['scaler'] = X_scaler
@@ -186,7 +194,7 @@ else:
 img = cv2.imread(r'test_images/test1.jpg')
 
 out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
-                    spatial_size, hist_bins)
+                    spatial_size, hist_bins, hog_channel=hog_channel)
 
 # plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_YCrCb2BGR))
 plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
