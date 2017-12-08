@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
 from scipy.ndimage.measurements import label
+from heat_map import HeatMap
 
 # dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
 # svc = dist_pickle["svc"]
@@ -217,65 +218,64 @@ spatial_size = (32, 32)
 hist_bins = 32
 hog_channel = 'ALL'
 
-cache = False
-if cache:
-    svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE,
-                                         hog_channel=hog_channel, orient=orient, pix_per_cell=pix_per_cell,
-                                         cell_per_block=cell_per_block)
-    svc_pickle = {}
-    svc_pickle['svc'] = svc
-    svc_pickle['scaler'] = X_scaler
-    pickle.dump(svc_pickle, open("svc_pickle.p", "wb"))
-else:
-    dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
-    svc = dist_pickle["svc"]
-    X_scaler = dist_pickle["scaler"]
+def run_for_images():
+    retrain = False
+    if retrain:
+        svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE,
+                                             hog_channel=hog_channel, orient=orient, pix_per_cell=pix_per_cell,
+                                             cell_per_block=cell_per_block)
+        svc_pickle = {}
+        svc_pickle['svc'] = svc
+        svc_pickle['scaler'] = X_scaler
+        pickle.dump(svc_pickle, open("svc_pickle.p", "wb"))
+    else:
+        dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
+        svc = dist_pickle["svc"]
+        X_scaler = dist_pickle["scaler"]
 
+    images = glob.glob('test_images/*.jpg', recursive=True)  # cars
+    for img_path in images:
+        img = cv2.imread(img_path)
+        bbox_list = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
+                            spatial_size, hist_bins, hog_channel=hog_channel)
 
+        # -------------------------------------------------
+        # Apply heat map
+        # -------------------------------------------------
+        heat_map = HeatMap(img)  # Heatmap to be used throughout pipeline
+        # Add heat to each box in box list
+        heat_map.add_heat(bbox_list)
+        # Apply threshold to help remove false positives
+        heat = heat_map.apply_threshold()
+        # Visualize the heatmap when displaying
+        heatmap = np.clip(heat, 0, 255)
+        # Find final boxes from heatmap using label function
+        labels = label(heatmap)
 
-# img = cv2.imread(r'test_images/test1.jpg')
+        # Overlay a thumbnail image
+        # overlay_img = add_thumbnail(img, thumb_img=labels[0])
+        # print(labels[1], 'cars found')
+        # plt.imshow(labels[0], cmap='hot')
+        # plt.show()
 
-images = glob.glob('test_images/*.jpg', recursive=True)  # cars
-for img_path in images:
-    img = cv2.imread(img_path)
-    bbox_list = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
-                        spatial_size, hist_bins, hog_channel=hog_channel)
+        out_img = draw_labeled_bboxes(np.copy(img), labels)
 
-    # -------------------------------------------------
-    # Apply heat map
-    # -------------------------------------------------
-    heat = np.zeros_like(img[:, :, 0]).astype(np.float)
-    # Add heat to each box in box list
-    heat = add_heat(heat, bbox_list)
-    # Apply threshold to help remove false positives
-    heat = apply_threshold(heat, 1)
-    # Visualize the heatmap when displaying
-    heatmap = np.clip(heat, 0, 255)
-    # Find final boxes from heatmap using label function
-    labels = label(heatmap)
+        # Save image
+        cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
 
-    # NEW
-    # overlay_img = add_thumbnail(img, thumb_img=labels[0])
-    # print(labels[1], 'cars found')
-    # plt.imshow(labels[0], cmap='hot')
-    # plt.show()
+        fig = plt.figure()
+        plt.subplot(121)
+        plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+        plt.title('Car Positions')
+        plt.subplot(122)
+        plt.imshow(heatmap, cmap='hot')
+        plt.title('Heat Map')
+        fig.tight_layout()
+        plt.show()
 
-    out_img = draw_labeled_bboxes(np.copy(img), labels)
+def run_for_video():
+    pass
 
-    # Save image
-    cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
-
-    # plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
-    # plt.show()
-
-    fig = plt.figure()
-    plt.subplot(121)
-    plt.imshow(out_img)
-    plt.title('Car Positions')
-    plt.subplot(122)
-    plt.imshow(heatmap, cmap='hot')
-    plt.title('Heat Map')
-    fig.tight_layout()
-    plt.show()
-
-    break
+if __name__ == '__main__':
+    run_for_images()
+    # run_for_video()
