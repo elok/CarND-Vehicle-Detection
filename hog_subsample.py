@@ -1,15 +1,16 @@
-import matplotlib.image as mpimg
+# import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-import numpy as np
+# import numpy as np
 import pickle
 import os
-import cv2
+# import cv2
 from util import *
 import glob
 import time
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
+from scipy.ndimage.measurements import label
 
 # dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
 # svc = dist_pickle["svc"]
@@ -90,9 +91,25 @@ def train_and_return_svc(spatial, histbin, color_space, hog_channel, orient, pix
 
     return svc, X_scaler
 
-# Define a single function that can extract features using hog sub-sampling and make predictions
+
 def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
               hist_bins, hog_channel):
+    """
+    Define a single function that can extract features using hog sub-sampling and make predictions
+    :param img:
+    :param ystart:
+    :param ystop:
+    :param scale:
+    :param svc:
+    :param X_scaler:
+    :param orient:
+    :param pix_per_cell:
+    :param cell_per_block:
+    :param spatial_size:
+    :param hist_bins:
+    :param hog_channel:
+    :return:
+    """
     draw_img = np.copy(img)
     # img = img.astype(np.float32) / 255
 
@@ -122,6 +139,8 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     hog1 = get_hog_features(ch1, orient, pix_per_cell, cell_per_block, feature_vec=False)
     hog2 = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
     hog3 = get_hog_features(ch3, orient, pix_per_cell, cell_per_block, feature_vec=False)
+
+    bbox_list = []
 
     for xb in range(nxsteps):
         for yb in range(nysteps):
@@ -158,9 +177,18 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
                 xbox_left = np.int(xleft * scale)
                 ytop_draw = np.int(ytop * scale)
                 win_draw = np.int(window * scale)
-                cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
-                              (xbox_left + win_draw, ytop_draw + win_draw + ystart), (255, 0, 0), 6)
 
+                # cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
+                #               (xbox_left + win_draw, ytop_draw + win_draw + ystart), (255, 0, 0), 6)
+
+                bbox_list.append(((xbox_left, ytop_draw + ystart), (xbox_left + win_draw, ytop_draw + win_draw + ystart)))
+
+    return bbox_list
+
+def draw_boxes(img, bbox_list):
+    draw_img = np.copy(img)
+    for box in bbox_list:
+        cv2.rectangle(draw_img, box[0], box[1], (255, 0, 0), 6)
     return draw_img
 
 COLOR_SPACE = 'YUV'
@@ -200,12 +228,25 @@ else:
 images = glob.glob('test_images/*.jpg', recursive=True)  # cars
 for img_path in images:
     img = cv2.imread(img_path)
-    out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
+    bbox_list = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
                         spatial_size, hist_bins, hog_channel=hog_channel)
+
+    # -------------------------------------------------
+    # Apply heat map
+    # -------------------------------------------------
+    heat = np.zeros_like(img[:, :, 0]).astype(np.float)
+    # Add heat to each box in box list
+    heat = add_heat(heat, bbox_list)
+    # Apply threshold to help remove false positives
+    heat = apply_threshold(heat, 1)
+    # Visualize the heatmap when displaying
+    heatmap = np.clip(heat, 0, 255)
+    # Find final boxes from heatmap using label function
+    labels = label(heatmap)
+    out_img = draw_labeled_bboxes(np.copy(img), labels)
 
     # Save image
     cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
 
-    # plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_YCrCb2BGR))
     plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
     plt.show()
