@@ -211,6 +211,7 @@ class MasterVehicleDetection():
         self.svc = svc
         self.X_scaler = X_scaler
         self.heat_map = HeatMap(img)
+        self.last_heat_img = None
 
     def process_image(self, img):
         bbox_list = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell, cell_per_block,
@@ -234,8 +235,10 @@ class MasterVehicleDetection():
         # plt.imshow(labels[0], cmap='hot')
         # plt.show()
 
+        self.last_heat_img = heat_map_img
+
         out_img = draw_labeled_bboxes(np.copy(img), labels)
-        return out_img, heat_map_img
+        return out_img
 
 def run_for_images():
     retrain = False
@@ -274,6 +277,21 @@ def run_for_images():
         plt.show()
 
 def run_for_video():
+    retrain = False
+    if retrain:
+        svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE,
+                                             hog_channel=hog_channel, orient=orient, pix_per_cell=pix_per_cell,
+                                             cell_per_block=cell_per_block)
+        svc_pickle = {}
+        svc_pickle['svc'] = svc
+        svc_pickle['scaler'] = X_scaler
+        pickle.dump(svc_pickle, open("svc_pickle.p", "wb"))
+    else:
+        dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
+        svc = dist_pickle["svc"]
+        X_scaler = dist_pickle["scaler"]
+
+
     video_filename = 'test_video'
     # video_filename = 'project_video'
     video_output_filename = video_filename + '_output.mp4'
@@ -281,9 +299,12 @@ def run_for_video():
     # clip1 = VideoFileClip(video_filename + '.mp4').subclip(40, 45) # shadow
     clip1 = VideoFileClip(video_filename + '.mp4')
 
-    white_clip = clip1.fl_image(process_image)  # NOTE: this function expects color images!!
+    img = cv2.imread(r'test_images/test1.jpg')
+    veh_det = MasterVehicleDetection(img=img, svc=svc, X_scaler=X_scaler)
+
+    white_clip = clip1.fl_image(veh_det.process_image)
     white_clip.write_videofile(video_output_filename, audio=False)
 
 if __name__ == '__main__':
-    run_for_images()
-    # run_for_video()
+    # run_for_images()
+    run_for_video()
