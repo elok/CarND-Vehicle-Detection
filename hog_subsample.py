@@ -1,9 +1,7 @@
-# import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-# import numpy as np
 import pickle
 import os
-# import cv2
+from moviepy.editor import VideoFileClip
 from lesson_functions import *
 import glob
 import time
@@ -12,16 +10,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
 from scipy.ndimage.measurements import label
 from heat_map import HeatMap
-
-# dist_pickle = pickle.load(open("svc_pickle.p", "rb"))
-# svc = dist_pickle["svc"]
-# X_scaler = dist_pickle["scaler"]
-# orient = dist_pickle["orient"]
-# pix_per_cell = dist_pickle["pix_per_cell"]
-# cell_per_block = dist_pickle["cell_per_block"]
-# spatial_size = dist_pickle["spatial_size"]
-# hist_bins = dist_pickle["hist_bins"]
-
 
 def train_and_return_svc(spatial, histbin, color_space, hog_channel, orient, pix_per_cell, cell_per_block):
     """
@@ -218,6 +206,31 @@ spatial_size = (32, 32)
 hist_bins = 32
 hog_channel = 'ALL'
 
+def process_image(img, heat_map, svc, X_scaler):
+    bbox_list = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
+                          spatial_size, hist_bins, hog_channel=hog_channel)
+
+    # -------------------------------------------------
+    # Apply heat map
+    # -------------------------------------------------
+    # Add heat to each box in box list
+    heat_map.add_heat(bbox_list)
+    # Apply threshold to help remove false positives
+    heat = heat_map.apply_threshold()
+    # Visualize the heatmap when displaying
+    heat_map_img = np.clip(heat, 0, 255)
+    # Find final boxes from heatmap using label function
+    labels = label(heat_map_img)
+
+    # Overlay a thumbnail image
+    # overlay_img = add_thumbnail(img, thumb_img=labels[0])
+    # print(labels[1], 'cars found')
+    # plt.imshow(labels[0], cmap='hot')
+    # plt.show()
+
+    out_img = draw_labeled_bboxes(np.copy(img), labels)
+    return out_img, heat_map_img
+
 def run_for_images():
     retrain = False
     if retrain:
@@ -236,29 +249,10 @@ def run_for_images():
     images = glob.glob('test_images/*.jpg', recursive=True)  # cars
     for img_path in images:
         img = cv2.imread(img_path)
-        bbox_list = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
-                            spatial_size, hist_bins, hog_channel=hog_channel)
 
-        # -------------------------------------------------
-        # Apply heat map
-        # -------------------------------------------------
-        heat_map = HeatMap(img)  # Heatmap to be used throughout pipeline
-        # Add heat to each box in box list
-        heat_map.add_heat(bbox_list)
-        # Apply threshold to help remove false positives
-        heat = heat_map.apply_threshold()
-        # Visualize the heatmap when displaying
-        heatmap = np.clip(heat, 0, 255)
-        # Find final boxes from heatmap using label function
-        labels = label(heatmap)
+        heat_map = HeatMap(img)
 
-        # Overlay a thumbnail image
-        # overlay_img = add_thumbnail(img, thumb_img=labels[0])
-        # print(labels[1], 'cars found')
-        # plt.imshow(labels[0], cmap='hot')
-        # plt.show()
-
-        out_img = draw_labeled_bboxes(np.copy(img), labels)
+        out_img, heat_map_img = process_image(img, heat_map, svc, X_scaler)
 
         # Save image
         cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
@@ -268,13 +262,21 @@ def run_for_images():
         plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
         plt.title('Car Positions')
         plt.subplot(122)
-        plt.imshow(heatmap, cmap='hot')
+        plt.imshow(heat_map_img, cmap='hot')
         plt.title('Heat Map')
         fig.tight_layout()
         plt.show()
 
 def run_for_video():
-    pass
+    video_filename = 'project_video'
+    white_output = video_filename + '_output.mp4'
+
+
+    # clip1 = VideoFileClip(video_filename + '.mp4').subclip(40, 45) # shadow
+    clip1 = VideoFileClip(video_filename + '.mp4')
+
+    white_clip = clip1.fl_image(process_image)  # NOTE: this function expects color images!!
+    white_clip.write_videofile(white_output, audio=False)
 
 if __name__ == '__main__':
     run_for_images()
