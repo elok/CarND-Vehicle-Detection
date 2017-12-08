@@ -2,6 +2,7 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+import os
 import cv2
 from util import *
 import glob
@@ -20,7 +21,7 @@ from sklearn.svm import LinearSVC
 # hist_bins = dist_pickle["hist_bins"]
 
 
-def train_and_return_svc(spatial, histbin, color_space, hog_channel):
+def train_and_return_svc(spatial, histbin, color_space, hog_channel, orient, pix_per_cell, cell_per_block):
     """
 
     :param spatial: (32, 32)
@@ -48,9 +49,11 @@ def train_and_return_svc(spatial, histbin, color_space, hog_channel):
     # histbin = 32
 
     car_features = extract_features(cars, color_space=color_space, spatial_size=spatial, hist_bins=histbin,
-                                    hog_channel=hog_channel)
+                                    hog_channel=hog_channel, orient=orient, pix_per_cell=pix_per_cell,
+                                    cell_per_block=cell_per_block)
     notcar_features = extract_features(notcars, color_space=color_space, spatial_size=spatial, hist_bins=histbin,
-                                       hog_channel=hog_channel)
+                                    hog_channel=hog_channel, orient=orient, pix_per_cell=pix_per_cell,
+                                    cell_per_block=cell_per_block)
 
     # Create an array stack of feature vectors
     X = np.vstack((car_features, notcar_features)).astype(np.float64)
@@ -179,7 +182,8 @@ hog_channel = 'ALL'
 cache = False
 if cache:
     svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE,
-                                         hog_channel=hog_channel)
+                                         hog_channel=hog_channel, orient=orient, pix_per_cell=pix_per_cell,
+                                         cell_per_block=cell_per_block)
     svc_pickle = {}
     svc_pickle['svc'] = svc
     svc_pickle['scaler'] = X_scaler
@@ -191,11 +195,17 @@ else:
 
 
 
-img = cv2.imread(r'test_images/test1.jpg')
+# img = cv2.imread(r'test_images/test1.jpg')
 
-out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
-                    spatial_size, hist_bins, hog_channel=hog_channel)
+images = glob.glob('test_images/*.jpg', recursive=True)  # cars
+for img_path in images:
+    img = cv2.imread(img_path)
+    out_img = find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block,
+                        spatial_size, hist_bins, hog_channel=hog_channel)
 
-# plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_YCrCb2BGR))
-plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
-plt.show()
+    # Save image
+    cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
+
+    # plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_YCrCb2BGR))
+    plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+    plt.show()
