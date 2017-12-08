@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pickle
 import os
 # import cv2
-from util import *
+from lesson_functions import *
 import glob
 import time
 from sklearn.preprocessing import StandardScaler
