@@ -1,3 +1,17 @@
+"""
+The goals / steps of this project are the following:
+
+- Perform a Histogram of Oriented Gradients (HOG) feature extraction on a labeled training set of images and train a
+classifier Linear SVM classifier
+- Optionally, you can also apply a color transform and append binned color features, as well as histograms of color,
+to your HOG feature vector.
+- Note: for those first two steps don't forget to normalize your features and randomize a selection for training and
+testing.
+- Implement a sliding-window technique and use your trained classifier to search for vehicles in images.
+- Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4)
+and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
+- Estimate a bounding box for vehicles detected.
+"""
 import matplotlib.pyplot as plt
 import pickle
 import os
@@ -10,6 +24,168 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
 from scipy.ndimage.measurements import label
 from heat_map import HeatMap
+
+COLOR_SPACE = 'YUV'
+CONVERT_COLOR_SPACE = 'BGR2YUV'
+
+# Min and max in y to search in slide_window()
+ystart = 400
+ystop = 656
+scale = 1.5
+
+orient = 11  # HOG orientations
+pix_per_cell = 16  # HOG pixels per cell
+cell_per_block = 2  # HOG cells per block
+spatial_size = (32, 32)  # Spatial binning dimensions (aka resizing)
+hist_bins = 32  # Number of histogram bins
+hog_channel = 'ALL'  # Can be 0, 1, 2, or "ALL"
+
+class MasterVehicleDetection():
+
+    def __init__(self, img, svc, X_scaler):
+        self.svc = svc
+        self.X_scaler = X_scaler
+        self.heat_map = HeatMap(img)
+        self.num_frame = 0
+        self.last_heat_img = None
+
+    def show_boxes(self, img, bbox_list):
+        new_img = draw_boxes(img, bbox_list)
+        plt.imshow(new_img)
+        plt.show()
+
+    def process_image(self, img):
+        bound_box_list_all = []
+        show_boxes = True
+
+        ystart = 400
+        ystop = 464
+        scale = 1.0
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell, cell_per_block,
+                              spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+            if show_boxes:
+                show_boxes(img, bbox_list_curr)
+
+        ystart = 416
+        ystop = 480
+        scale = 1.0
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+            if show_boxes:
+                show_boxes(img, bbox_list_curr)
+
+        ystart = 400
+        ystop = 496
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+            if show_boxes:
+                show_boxes(img, bbox_list_curr)
+
+        ystart = 432
+        ystop = 528
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+            if show_boxes:
+                show_boxes(img, bbox_list_curr)
+
+        ystart = 400
+        ystop = 528
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+            if show_boxes:
+                show_boxes(img, bbox_list_curr)
+
+        ystart = 432
+        ystop = 560
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+            if show_boxes:
+                show_boxes(img, bbox_list_curr)
+
+        ystart = 400
+        ystop = 596
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+            if show_boxes:
+                show_boxes(img, bbox_list_curr)
+
+        ystart = 464
+        ystop = 660
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+            if show_boxes:
+                show_boxes(img, bbox_list_curr)
+
+        bound_box_list_all = [item for sublist in bound_box_list_all for item in sublist]
+
+        # -------------------------------------------------
+        # Apply heat map
+        # -------------------------------------------------
+        # Add heat to each box in box list
+        self.heat_map.add_heat(bound_box_list_all)
+        # Apply threshold to help remove false positives
+        heat = self.heat_map.apply_threshold()
+        # Visualize the heatmap when displaying
+        heat_map_img = np.clip(heat, 0, 255)
+        # Find final boxes from heatmap using label function
+        labels = label(heat_map_img)
+
+        self.last_heat_img = heat_map_img
+
+        self.save_images(img, heat_map_img, self.num_frame)
+        self.num_frame += 1
+
+        out_img = draw_labeled_bboxes(np.copy(img), labels)
+        return out_img
+
+    def save_images(self, img, heatmap, frame):
+        # plt.figure()
+        # Plot the result
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+        fig.subplots_adjust(hspace=0.1, wspace=0.05)
+
+        axes[0].imshow(img)
+        title = "frame {0}".format(frame)
+        axes[0].set_title(title, fontsize=11)
+        axes[0].set_xticks([])
+        axes[0].set_yticks([])
+
+        axes[1].imshow(heatmap)
+        title = "heatmap {0}".format(frame)
+        axes[1].set_title(title, fontsize=11)
+        axes[1].set_xticks([])
+        axes[1].set_yticks([])
+
+        plt.savefig('heat_maps/heatmap_{0}.jpg'.format(frame))
 
 def train_and_return_svc(spatial, histbin, color_space, hog_channel, orient, pix_per_cell, cell_per_block):
     """
@@ -195,143 +371,6 @@ def add_thumbnail(img, thumb_img, scale=0.9, x_offset=10, y_offset=10):
     draw_img[y_offset:y_offset + resized_thumb_img.shape[0], x_offset:x_offset + resized_thumb_img.shape[1]] = resized_thumb_img
     return draw_img
 
-COLOR_SPACE = 'YUV'
-CONVERT_COLOR_SPACE = 'BGR2YUV'
-
-# Min and max in y to search in slide_window()
-ystart = 400
-ystop = 656
-scale = 1.5
-
-orient = 11  # HOG orientations
-pix_per_cell = 16  # HOG pixels per cell
-cell_per_block = 2  # HOG cells per block
-spatial_size = (32, 32)  # Spatial binning dimensions (aka resizing)
-hist_bins = 32  # Number of histogram bins
-hog_channel = 'ALL'  # Can be 0, 1, 2, or "ALL"
-
-class MasterVehicleDetection():
-
-    def __init__(self, img, svc, X_scaler):
-        self.svc = svc
-        self.X_scaler = X_scaler
-        self.heat_map = HeatMap(img)
-        self.num_frame = 0
-
-    def process_image(self, img):
-        bound_box_list_all = []
-
-        ystart = 400
-        ystop = 464
-        scale = 1.0
-        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell, cell_per_block,
-                              spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-
-        ystart = 416
-        ystop = 480
-        scale = 1.0
-        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-
-        ystart = 400
-        ystop = 496
-        scale = 1.5
-        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-
-        ystart = 432
-        ystop = 528
-        scale = 1.5
-        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-
-        ystart = 400
-        ystop = 528
-        scale = 1.5
-        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-
-        ystart = 432
-        ystop = 560
-        scale = 1.5
-        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-
-        ystart = 400
-        ystop = 596
-        scale = 1.5
-        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-
-        ystart = 464
-        ystop = 660
-        scale = 1.5
-        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-
-        bound_box_list_all = [item for sublist in bound_box_list_all for item in sublist]
-
-        # -------------------------------------------------
-        # Apply heat map
-        # -------------------------------------------------
-        # Add heat to each box in box list
-        self.heat_map.add_heat(bound_box_list_all)
-        # Apply threshold to help remove false positives
-        heat = self.heat_map.apply_threshold()
-        # Visualize the heatmap when displaying
-        heat_map_img = np.clip(heat, 0, 255)
-        # Find final boxes from heatmap using label function
-        labels = label(heat_map_img)
-
-        self.save_images(img, heat_map_img, self.num_frame)
-        self.num_frame += 1
-
-        out_img = draw_labeled_bboxes(np.copy(img), labels)
-        return out_img
-
-    def save_images(self, img, heatmap, frame):
-        # plt.figure()
-        # Plot the result
-        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-        fig.subplots_adjust(hspace=0.1, wspace=0.05)
-
-        axes[0].imshow(img)
-        title = "frame {0}".format(frame)
-        axes[0].set_title(title, fontsize=11)
-        axes[0].set_xticks([])
-        axes[0].set_yticks([])
-
-        axes[1].imshow(heatmap)
-        title = "heatmap {0}".format(frame)
-        axes[1].set_title(title, fontsize=11)
-        axes[1].set_xticks([])
-        axes[1].set_yticks([])
-
-        plt.savefig('heat_maps/heatmap_{0}.jpg'.format(frame))
-
 def run_for_images():
     retrain = False
     if retrain:
@@ -409,5 +448,5 @@ def run_for_video():
     white_clip.write_videofile(video_output_filename, audio=False)
 
 if __name__ == '__main__':
-    # run_for_images()
-    run_for_video()
+    run_for_images()
+    # run_for_video()
