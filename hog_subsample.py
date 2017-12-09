@@ -180,12 +180,17 @@ def draw_boxes(img, bbox_list):
         cv2.rectangle(draw_img, box[0], box[1], (255, 0, 0), 6)
     return draw_img
 
-def add_thumbnail(img, thumb_img, scale=0.3, x_offset=10, y_offset=10):
+def add_thumbnail(img, thumb_img, scale=0.9, x_offset=10, y_offset=10):
     draw_img = np.copy(img)
 
-    thumb_img_3_channels = np.dstack((thumb_img, thumb_img, thumb_img)).astype(np.uint8) / 255
+    if thumb_img.ndim == 2:
+        thumb_img = cv2.cvtColor((thumb_img / thumb_img.max()).astype('float32'), cv2.COLOR_GRAY2BGR)
 
-    resized_thumb_img = cv2.resize(thumb_img_3_channels, (0, 0), fx=scale, fy=scale)
+    resized_thumb_img = cv2.resize(thumb_img, (0, 0), fx=scale, fy=scale)
+
+    # x = cv2.cvtColor(resized_thumb_img, cv2.COLOR_GRAY2RGB)
+    plt.imshow(resized_thumb_img)
+    plt.show()
 
     draw_img[y_offset:y_offset + resized_thumb_img.shape[0], x_offset:x_offset + resized_thumb_img.shape[1]] = resized_thumb_img
     return draw_img
@@ -225,15 +230,12 @@ class MasterVehicleDetection():
         # Apply threshold to help remove false positives
         heat = self.heat_map.apply_threshold()
         # Visualize the heatmap when displaying
-        heat_map_img = np.clip(heat, 0, 255)
+        heat_map_img = np.clip(heat, 0, 150)
         # Find final boxes from heatmap using label function
         labels = label(heat_map_img)
 
         # Overlay a thumbnail image
-        # overlay_img = add_thumbnail(img, thumb_img=labels[0])
-        # print(labels[1], 'cars found')
-        # plt.imshow(labels[0], cmap='hot')
-        # plt.show()
+        # overlay_img = add_thumbnail(img, thumb_img=heat_map_img)
 
         self.last_heat_img = heat_map_img
 
@@ -261,7 +263,7 @@ def run_for_images():
 
         veh_det = MasterVehicleDetection(img=img, svc=svc, X_scaler=X_scaler)
 
-        out_img, heat_map_img = veh_det.process_image(img)
+        out_img = veh_det.process_image(img)
 
         # Save image
         cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
@@ -271,7 +273,7 @@ def run_for_images():
         plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
         plt.title('Car Positions')
         plt.subplot(122)
-        plt.imshow(heat_map_img, cmap='hot')
+        plt.imshow(veh_det.last_heat_img, cmap='hot')
         plt.title('Heat Map')
         fig.tight_layout()
         plt.show()
