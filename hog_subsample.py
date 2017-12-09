@@ -216,31 +216,121 @@ class MasterVehicleDetection():
         self.svc = svc
         self.X_scaler = X_scaler
         self.heat_map = HeatMap(img)
-        self.last_heat_img = None
+        self.num_frame = 0
 
     def process_image(self, img):
-        bbox_list = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell, cell_per_block,
+        bound_box_list_all = []
+
+        ystart = 400
+        ystop = 464
+        scale = 1.0
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell, cell_per_block,
                               spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        ystart = 416
+        ystop = 480
+        scale = 1.0
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        ystart = 400
+        ystop = 496
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        ystart = 432
+        ystop = 528
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        ystart = 400
+        ystop = 528
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        ystart = 432
+        ystop = 560
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        ystart = 400
+        ystop = 596
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        ystart = 464
+        ystop = 660
+        scale = 1.5
+        bbox_list_curr = find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        bound_box_list_all = [item for sublist in bound_box_list_all for item in sublist]
 
         # -------------------------------------------------
         # Apply heat map
         # -------------------------------------------------
         # Add heat to each box in box list
-        self.heat_map.add_heat(bbox_list)
+        self.heat_map.add_heat(bound_box_list_all)
         # Apply threshold to help remove false positives
         heat = self.heat_map.apply_threshold()
         # Visualize the heatmap when displaying
-        heat_map_img = np.clip(heat, 0, 150)
+        heat_map_img = np.clip(heat, 0, 255)
         # Find final boxes from heatmap using label function
         labels = label(heat_map_img)
 
-        # Overlay a thumbnail image
-        # overlay_img = add_thumbnail(img, thumb_img=heat_map_img)
-
-        self.last_heat_img = heat_map_img
+        self.save_images(img, heat_map_img, self.num_frame)
+        self.num_frame += 1
 
         out_img = draw_labeled_bboxes(np.copy(img), labels)
         return out_img
+
+    def save_images(self, img, heatmap, frame):
+        # plt.figure()
+        # Plot the result
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+        fig.subplots_adjust(hspace=0.1, wspace=0.05)
+
+        axes[0].imshow(img)
+        title = "frame {0}".format(frame)
+        axes[0].set_title(title, fontsize=11)
+        axes[0].set_xticks([])
+        axes[0].set_yticks([])
+
+        axes[1].imshow(heatmap)
+        title = "heatmap {0}".format(frame)
+        axes[1].set_title(title, fontsize=11)
+        axes[1].set_xticks([])
+        axes[1].set_yticks([])
+
+        plt.savefig('heat_maps/heatmap_{0}.jpg'.format(frame))
 
 def run_for_images():
     retrain = False
@@ -278,7 +368,19 @@ def run_for_images():
         fig.tight_layout()
         plt.show()
 
+def clear_folder(folder):
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            # elif os.path.isdir(file_path): shutil.rmtree(file_path)
+        except Exception as e:
+            print(e)
+
 def run_for_video():
+    clear_folder(r'heat_maps')
+
     retrain = False
     if retrain:
         svc, X_scaler = train_and_return_svc(spatial=spatial_size, histbin=hist_bins, color_space=COLOR_SPACE,
@@ -293,9 +395,8 @@ def run_for_video():
         svc = dist_pickle["svc"]
         X_scaler = dist_pickle["scaler"]
 
-
-    video_filename = 'test_video'
-    # video_filename = 'project_video'
+    # video_filename = 'test_video'
+    video_filename = 'project_video'
     video_output_filename = video_filename + '_output.mp4'
 
     # clip1 = VideoFileClip(video_filename + '.mp4').subclip(40, 45) # shadow
