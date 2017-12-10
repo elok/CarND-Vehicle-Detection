@@ -50,28 +50,30 @@ class MasterVehicleDetection():
         self.last_heat_img = None
         self.last_img_with_all_searched_bound_box = None
 
-    def debug_show_boxes(self, img, bbox_list, title=''):
+    def debug_show_boxes(self, img, bbox_list, title='', frame=0):
         if bbox_list:
             img_w_car_bbox = draw_boxes(img, bbox_list)
 
-            fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+            fig, axes = plt.subplots(1, 3, figsize=(10, 4))
             fig.subplots_adjust(hspace=0.4, wspace=0.05)
 
             axes[0].imshow(img_w_car_bbox)
             sub_title = "img_w_car_bbox"
             axes[0].set_title(sub_title, fontsize=11)
-            # axes[0].set_xticks([])
-            # axes[0].set_yticks([])
 
             axes[1].imshow(self.last_img_with_all_searched_bound_box)
             sub_title = "last_img_with_all_searched_bound_box"
             axes[1].set_title(sub_title, fontsize=11)
-            # axes[1].set_xticks([])
-            # axes[1].set_yticks([])
+
+            axes[2].imshow(self.heat_map.heat_map)
+            sub_title = "heat_map"
+            axes[2].set_title(sub_title, fontsize=11)
 
             plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
             plt.suptitle(title)
+
             plt.show()
+            # plt.savefig('heat_maps/heatmap_{0}.jpg'.format(frame))
 
     def find_cars(self, img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
                   hist_bins, hog_channel, debug_draw_box=False):
@@ -179,7 +181,7 @@ class MasterVehicleDetection():
 
     def process_image(self, img):
         bound_box_list_all = []
-        debug_show_boxes = False
+        debug_show_boxes = True
 
         ystart = 400
         ystop = 600
@@ -189,7 +191,7 @@ class MasterVehicleDetection():
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
         if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1')
+            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1', frame=self.num_frame)
 
         ystart = 400
         ystop = 600
@@ -200,7 +202,7 @@ class MasterVehicleDetection():
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
         if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1.5')
+            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1.5', frame=self.num_frame)
 
         ystart = 500
         ystop = 720
@@ -211,7 +213,7 @@ class MasterVehicleDetection():
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
         if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='medium cars on horizon - scale 1')
+            self.debug_show_boxes(img, bbox_list_curr, title='medium cars on horizon - scale 1', frame=self.num_frame)
 
         ystart = 500
         ystop = 720
@@ -222,7 +224,7 @@ class MasterVehicleDetection():
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
         if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1.5')
+            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1.5', frame=self.num_frame)
 
         ystart = 500
         ystop = 720
@@ -233,7 +235,7 @@ class MasterVehicleDetection():
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
         if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='large cars on horizon - scale 1')
+            self.debug_show_boxes(img, bbox_list_curr, title='large cars on horizon - scale 1', frame=self.num_frame)
 
         ystart = 500
         ystop = 720
@@ -244,7 +246,7 @@ class MasterVehicleDetection():
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
         if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='large cars on horizon - scale 1.5')
+            self.debug_show_boxes(img, bbox_list_curr, title='large cars on horizon - scale 1.5', frame=self.num_frame)
 
         bound_box_list_all = [item for sublist in bound_box_list_all for item in sublist]
 
@@ -443,8 +445,8 @@ def run_for_video():
         svc = dist_pickle["svc"]
         X_scaler = dist_pickle["scaler"]
 
-    # video_filename = 'test_video'
-    video_filename = 'project_video'
+    video_filename = 'test_video'
+    # video_filename = 'project_video'
     video_output_filename = video_filename + '_output.mp4'
 
     # clip1 = VideoFileClip(video_filename + '.mp4').subclip(40, 45) # shadow
