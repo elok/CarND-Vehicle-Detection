@@ -6,7 +6,7 @@ class HeatMap():
         self.heat_map = np.zeros_like(img[:, :, 0]).astype(np.float)
         self.hot_increment = 1
         self.bounding_boxes = []
-        self.threshold = 1
+        # self.threshold = 1
 
     def add_heat(self, bbox_list):
 
@@ -20,8 +20,8 @@ class HeatMap():
         # Return updated heatmap
         return self.heat_map
 
-    def apply_threshold(self):
+    def apply_threshold(self, threshold):
         # Zero out pixels below the threshold
-        self.heat_map[self.heat_map <= self.threshold] = 0
+        self.heat_map[self.heat_map <= threshold] = 0
         # Return thresholded map
         return self.heat_map
