@@ -76,12 +76,15 @@ class MasterVehicleDetection():
         draw_img = np.copy(img)
         # img = img.astype(np.float32) / 255
 
+        # crop the image to the start and stop in the y axis
         img_tosearch = img[ystart:ystop, :, :]
+        # color transform to search
         ctrans_tosearch = convert_color(img_tosearch, conv=CONVERT_COLOR_SPACE)
         if scale != 1:
             imshape = ctrans_tosearch.shape
             ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1] / scale), np.int(imshape[0] / scale)))
 
+        # extract the 3 color channels
         ch1 = ctrans_tosearch[:, :, 0]
         ch2 = ctrans_tosearch[:, :, 1]
         ch3 = ctrans_tosearch[:, :, 2]
