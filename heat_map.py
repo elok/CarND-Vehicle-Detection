@@ -10,6 +10,11 @@ class HeatMap():
         # self.threshold = 1
 
     def add_heat(self, bbox_list):
+
+        # chill the whole heat map by one
+        self.heat_map -= 1
+        self.heat_map = np.clip(self.heat_map, 0, 255)
+
         # Iterate through list of bboxes
         for box in bbox_list:
             # Add += 1 for all pixels inside each bbox

@@ -305,7 +305,7 @@ class MasterVehicleDetection():
         # debug_plot.show_plot()
 
         out_img_w_boxes = draw_boxes(out_img, bound_box_list_all)
-        img_w_overlay = add_thumbnail(out_img, out_img_w_boxes, x_offset=480)
+        img_w_overlay = add_thumbnail(out_img, out_img_w_boxes, x_offset=440)
         img_w_overlay = add_thumbnail(img_w_overlay, self.heat_map.get_heat_map_as_RGB())
 
         # return out_img
