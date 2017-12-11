@@ -24,13 +24,16 @@ from sklearn.svm import LinearSVC
 from scipy.ndimage.measurements import label
 # from heat_map import HeatMap
 
-COLOR_SPACE = 'YUV'
+COLOR_SPACE = 'YUV'  # RGB, HSV, LUV, HLS, YUV or YCrCb    # Test Accuracy of SVC =  0.9932
 CONVERT_COLOR_SPACE = 'BGR2YUV'
 
+# COLOR_SPACE = 'HLS'  # Test Accuracy of SVC =  0.9918
+# CONVERT_COLOR_SPACE = 'BGR2HLS'
+
 # Min and max in y to search in slide_window()
-ystart = 400
-ystop = 656
-scale = 1.5
+# ystart = 400
+# ystop = 656
+# scale = 1.5
 
 orient = 11  # HOG orientations
 pix_per_cell = 16  # HOG pixels per cell
@@ -52,6 +55,7 @@ class MasterVehicleDetection():
 
     def add_bbox(self, bbox):
         self.prev_bounding_boxes.append(bbox)
+        BOUNDING_BOXES_TO_KEEP = 15
         if len(self.prev_bounding_boxes) > 10:
             # throw out oldest rectangle set(s)
             self.prev_bounding_boxes = self.prev_bounding_boxes[len(self.prev_bounding_boxes) - 15:]
@@ -63,7 +67,7 @@ class MasterVehicleDetection():
         h[:, :, 2] = heat_map
         return h
 
-    def debug_show_boxes(self, img, bbox_list, title='', frame=0):
+    def debug_show_boxes(self, img, bbox_list, title=''):
         if bbox_list:
             img_w_car_bbox = draw_boxes(img, bbox_list)
 
@@ -172,6 +176,7 @@ class MasterVehicleDetection():
                     np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
                 # test_features = X_scaler.transform(np.hstack((shape_feat, hist_feat)).reshape(1, -1))
                 test_prediction = svc.predict(test_features)
+                confidence = svc.decision_function(test_features)
 
                 xbox_left = np.int(xleft * scale)
                 ytop_draw = np.int(ytop * scale)
@@ -181,7 +186,7 @@ class MasterVehicleDetection():
                 cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
                                   (xbox_left + win_draw, ytop_draw + win_draw + ystart), (255, 0, 0), 6)
 
-                if test_prediction == 1:
+                if test_prediction == 1 and confidence > 0.4:
                     # cv2.rectangle(draw_img, (xbox_left, ytop_draw + ystart),
                     #               (xbox_left + win_draw, ytop_draw + win_draw + ystart), (255, 0, 0), 6)
 
@@ -301,7 +306,8 @@ class MasterVehicleDetection():
             heat_map_img = np.zeros_like(img[:, :, 0])
         for rect_set in self.prev_bounding_boxes:
             heat_map_img = add_heat(heat_map_img, rect_set)
-            heat_map_img = apply_threshold(heat_map_img, 1 + len(self.prev_bounding_boxes) // 2)
+            # heat_map_img = apply_threshold(heat_map_img, 1 + len(self.prev_bounding_boxes) // 2)
+            heat_map_img = apply_threshold(heat_map_img, 5)
 
         # # Add heat to each box in box list
         # self.heat_map.add_heat(bound_box_list_all)
@@ -491,7 +497,7 @@ def clear_folder(folder):
             print(e)
 
 def run_for_video():
-    clear_folder(r'heat_maps')
+    # clear_folder(r'heat_maps')
 
     retrain = False
     if retrain:
@@ -514,7 +520,6 @@ def run_for_video():
     # clip1 = VideoFileClip(video_filename + '.mp4').subclip(40, 45) # shadow
     clip1 = VideoFileClip(video_filename + '.mp4')
 
-    img = cv2.imread(r'test_images/test1.jpg')
     veh_det = MasterVehicleDetection(svc=svc, X_scaler=X_scaler)
 
     white_clip = clip1.fl_image(veh_det.process_image)

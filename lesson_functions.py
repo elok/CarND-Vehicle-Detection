@@ -9,9 +9,25 @@ from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
-# Define a function to return HOG features and visualization
 def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, feature_vec=True):
-    # Call with two outputs if vis==True
+    """
+    Return HOG features and visualization
+    Call with two outputs if vis==True
+    "The scikit-image package has a built in function to extract Histogram of Oriented Gradient features."
+
+    :param img:
+    :param orient: specified as an integer, and represents the number of orientation bins that the gradient information
+        will be split up into in the histogram. Typical values are between 6 and 12 bins.
+    :param pix_per_cell: parameter specifies the cell size over which each gradient histogram is computed. This
+        paramater is passed as a 2-tuple so you could have different cell sizes in x and y, but cells are commonly
+        chosen to be square.
+    :param cell_per_block: parameter is also passed as a 2-tuple, and specifies the local area over which the histogram
+        counts in a given cell will be normalized. Block normalization is not necessarily required, but generally leads
+        to a more robust feature set.
+    :param vis:
+    :param feature_vec:
+    :return: HOG features
+    """
     if vis == True:
         features, hog_image = hog(img, orientations=orient,
                                   pixels_per_cell=(pix_per_cell, pix_per_cell),
