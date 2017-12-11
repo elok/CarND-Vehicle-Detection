@@ -12,7 +12,6 @@ testing.
 and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
 - Estimate a bounding box for vehicles detected.
 """
-import matplotlib.pyplot as plt
 import pickle
 import os
 from moviepy.editor import VideoFileClip
@@ -23,7 +22,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
 from scipy.ndimage.measurements import label
-from heat_map import HeatMap
+# from heat_map import HeatMap
 
 COLOR_SPACE = 'YUV'
 CONVERT_COLOR_SPACE = 'BGR2YUV'
@@ -42,13 +41,27 @@ hog_channel = 'ALL'  # Can be 0, 1, 2, or "ALL"
 
 class MasterVehicleDetection():
 
-    def __init__(self, img, svc, X_scaler):
+    def __init__(self, svc, X_scaler):
         self.svc = svc
         self.X_scaler = X_scaler
-        self.heat_map = HeatMap(img)
+        # self.heat_map = HeatMap(img)
         self.num_frame = 0
         self.last_heat_img = []
         self.last_img_with_all_searched_bound_box = None
+        self.prev_bounding_boxes = []
+
+    def add_bbox(self, bbox):
+        self.prev_bounding_boxes.append(bbox)
+        if len(self.prev_bounding_boxes) > 10:
+            # throw out oldest rectangle set(s)
+            self.prev_bounding_boxes = self.prev_bounding_boxes[len(self.prev_bounding_boxes) - 15:]
+
+    def get_heat_map_as_RGB(self, heat_map, img):
+        h = np.zeros_like(img).astype(np.float)
+        h[:, :, 0] = heat_map
+        h[:, :, 1] = heat_map
+        h[:, :, 2] = heat_map
+        return h
 
     def debug_show_boxes(self, img, bbox_list, title='', frame=0):
         if bbox_list:
@@ -117,6 +130,7 @@ class MasterVehicleDetection():
         # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
         window = 64
         nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
+        # This means that a cells_per_step = 2 would result in a search window overlap of 75%
         cells_per_step = 2  # Instead of overlap, define how many cells to step
         nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
         nysteps = (nyblocks - nblocks_per_window) // cells_per_step
@@ -193,8 +207,7 @@ class MasterVehicleDetection():
         scale = 1.0
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
                                         cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
+        bound_box_list_all.append(bbox_list_curr)
 
         img_w_car_bbox = draw_boxes(img, bbox_list_curr)
         debug_plot.add_images(title='Small cars on horizon - scale 1 : frame: {0}'.format(self.num_frame),
@@ -206,8 +219,7 @@ class MasterVehicleDetection():
         scale = 1.5
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
                                    cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
+        bound_box_list_all.append(bbox_list_curr)
 
         img_w_car_bbox = draw_boxes(img, bbox_list_curr)
         debug_plot.add_images(title='Small cars on horizon - scale 1.5 : frame: {0}'.format(self.num_frame),
@@ -220,8 +232,7 @@ class MasterVehicleDetection():
         scale = 1
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
                                    cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
+        bound_box_list_all.append(bbox_list_curr)
 
         img_w_car_bbox = draw_boxes(img, bbox_list_curr)
         debug_plot.add_images(title='medium cars on horizon - scale 1 : frame: {0}'.format(self.num_frame),
@@ -234,8 +245,7 @@ class MasterVehicleDetection():
         scale = 1
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
                                    cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
+        bound_box_list_all.append(bbox_list_curr)
 
         img_w_car_bbox = draw_boxes(img, bbox_list_curr)
         debug_plot.add_images(title='large cars on horizon - scale 1.5 : frame: {0}'.format(self.num_frame),
@@ -247,8 +257,7 @@ class MasterVehicleDetection():
         scale = 1.5
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
                                    cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
+        bound_box_list_all.append(bbox_list_curr)
 
         img_w_car_bbox = draw_boxes(img, bbox_list_curr)
         debug_plot.add_images(title='large cars on horizon - scale 1 : frame: {0}'.format(self.num_frame),
@@ -260,26 +269,47 @@ class MasterVehicleDetection():
         scale = 2.0
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
                                    cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
+        bound_box_list_all.append(bbox_list_curr)
 
         img_w_car_bbox = draw_boxes(img, bbox_list_curr)
         debug_plot.add_images(title='large cars on horizon - scale 2.0 : frame: {0}'.format(self.num_frame),
                               img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
                               img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
 
+        ystart = 400
+        ystop = 720
+        scale = 3.0
+        bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                        cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
+        bound_box_list_all.append(bbox_list_curr)
+
+        ystart = 400
+        ystop = 720
+        scale = 3.5
+        bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                        cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
+        bound_box_list_all.append(bbox_list_curr)
 
         bound_box_list_all = [item for sublist in bound_box_list_all for item in sublist]
 
         # -------------------------------------------------
         # Apply heat map
         # -------------------------------------------------
-        # Add heat to each box in box list
-        self.heat_map.add_heat(bound_box_list_all)
-        # Apply threshold to help remove false positives
-        heat = self.heat_map.apply_threshold(4)
-        # Visualize the heatmap when displaying
-        heat_map_img = np.clip(heat, 0, 255)
+        if len(bound_box_list_all) > 0:
+            self.add_bbox(bound_box_list_all)
+
+            heat_map_img = np.zeros_like(img[:, :, 0])
+        for rect_set in self.prev_bounding_boxes:
+            heat_map_img = add_heat(heat_map_img, rect_set)
+            heat_map_img = apply_threshold(heat_map_img, 1 + len(self.prev_bounding_boxes) // 2)
+
+        # # Add heat to each box in box list
+        # self.heat_map.add_heat(bound_box_list_all)
+        # # Apply threshold to help remove false positives
+        # heat = self.heat_map.apply_threshold(4)
+        # # Visualize the heatmap when displaying
+        # heat_map_img = np.clip(heat, 0, 255)
+
         # Find final boxes from heatmap using label function
         labels = label(heat_map_img)
 
@@ -293,15 +323,15 @@ class MasterVehicleDetection():
         # -------------------------------------------------
         # DEBUGGING
         # -------------------------------------------------
-        debug_plot.add_images(title='Summary',
-                              img_1=cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB), subtitle_1='Original img',
-                              img_2=self.heat_map.get_heat_map_as_RGB(), subtitle_2='Heat map',
-                              convert=False)
+        # debug_plot.add_images(title='Summary',
+        #                       img_1=cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB), subtitle_1='Original img',
+        #                       img_2=self.heat_map.get_heat_map_as_RGB(), subtitle_2='Heat map',
+        #                       convert=False)
         # debug_plot.show_plot()
 
         out_img_w_boxes = draw_boxes(out_img, bound_box_list_all)
         img_w_overlay = add_thumbnail(out_img, out_img_w_boxes, x_offset=420)
-        img_w_overlay = add_thumbnail(img_w_overlay, self.heat_map.get_heat_map_as_RGB())
+        img_w_overlay = add_thumbnail(img_w_overlay, self.get_heat_map_as_RGB(heat_map_img, out_img))
 
         # return out_img
         return img_w_overlay
@@ -485,7 +515,7 @@ def run_for_video():
     clip1 = VideoFileClip(video_filename + '.mp4')
 
     img = cv2.imread(r'test_images/test1.jpg')
-    veh_det = MasterVehicleDetection(img=img, svc=svc, X_scaler=X_scaler)
+    veh_det = MasterVehicleDetection(svc=svc, X_scaler=X_scaler)
 
     white_clip = clip1.fl_image(veh_det.process_image)
     white_clip.write_videofile(video_output_filename, audio=False)
