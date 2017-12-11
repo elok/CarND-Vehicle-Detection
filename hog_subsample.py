@@ -47,7 +47,7 @@ class MasterVehicleDetection():
         self.X_scaler = X_scaler
         self.heat_map = HeatMap(img)
         self.num_frame = 0
-        self.last_heat_img = None
+        self.last_heat_img = []
         self.last_img_with_all_searched_bound_box = None
 
     def debug_show_boxes(self, img, bbox_list, title='', frame=0):
@@ -181,30 +181,42 @@ class MasterVehicleDetection():
 
     def process_image(self, img):
         bound_box_list_all = []
-        debug_show_boxes = True
+        debug_plot = DebugPlot(title='Frame: {0}'.format(self.num_frame))
 
-        ystart = 400
-        ystop = 600
+        if len(self.last_heat_img) > 0:
+            debug_plot.add_images(title='last_heat_img : frame: {0}'.format(self.num_frame),
+                                 img_1=self.last_heat_img, subtitle_1='last_heat_img',
+                                 img_2=self.last_heat_img, subtitle_2='last_heat_img', convert=False)
+
+        ystart = 300
+        ystop = 720
         scale = 1.0
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell, cell_per_block,
                               spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
-        if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1', frame=self.num_frame)
+
+        img_w_car_bbox = draw_boxes(img, bbox_list_curr)
+        debug_plot.add_images(title='Small cars on horizon - scale 1 : frame: {0}'.format(self.num_frame),
+                              img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
+                              img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
+
+        ystart = 300
+        ystop = 720
+        scale = 1.5
+        bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        img_w_car_bbox = draw_boxes(img, bbox_list_curr)
+        debug_plot.add_images(title='Small cars on horizon - scale 1.5 : frame: {0}'.format(self.num_frame),
+                              img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
+                              img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
+
 
         ystart = 400
-        ystop = 600
-        scale = 1.5
-        bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-        if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1.5', frame=self.num_frame)
-
-        ystart = 500
         ystop = 720
         scale = 1
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
@@ -212,21 +224,14 @@ class MasterVehicleDetection():
                                    spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
-        if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='medium cars on horizon - scale 1', frame=self.num_frame)
 
-        ystart = 500
-        ystop = 720
-        scale = 1.5
-        bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
-        if bbox_list_curr:
-            bound_box_list_all.append(bbox_list_curr)
-        if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='small cars on horizon - scale 1.5', frame=self.num_frame)
+        img_w_car_bbox = draw_boxes(img, bbox_list_curr)
+        debug_plot.add_images(title='medium cars on horizon - scale 1 : frame: {0}'.format(self.num_frame),
+                              img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
+                              img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
 
-        ystart = 500
+
+        ystart = 400
         ystop = 720
         scale = 1
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
@@ -234,10 +239,13 @@ class MasterVehicleDetection():
                                    spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
-        if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='large cars on horizon - scale 1', frame=self.num_frame)
 
-        ystart = 500
+        img_w_car_bbox = draw_boxes(img, bbox_list_curr)
+        debug_plot.add_images(title='large cars on horizon - scale 1.5 : frame: {0}'.format(self.num_frame),
+                              img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
+                              img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
+
+        ystart = 400
         ystop = 720
         scale = 1.5
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
@@ -245,8 +253,26 @@ class MasterVehicleDetection():
                                    spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
-        if debug_show_boxes:
-            self.debug_show_boxes(img, bbox_list_curr, title='large cars on horizon - scale 1.5', frame=self.num_frame)
+
+        img_w_car_bbox = draw_boxes(img, bbox_list_curr)
+        debug_plot.add_images(title='large cars on horizon - scale 1 : frame: {0}'.format(self.num_frame),
+                              img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
+                              img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
+
+        ystart = 400
+        ystop = 720
+        scale = 2.0
+        bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                   cell_per_block,
+                                   spatial_size, hist_bins, hog_channel=hog_channel)
+        if bbox_list_curr:
+            bound_box_list_all.append(bbox_list_curr)
+
+        img_w_car_bbox = draw_boxes(img, bbox_list_curr)
+        debug_plot.add_images(title='large cars on horizon - scale 2.0 : frame: {0}'.format(self.num_frame),
+                              img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
+                              img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
+
 
         bound_box_list_all = [item for sublist in bound_box_list_all for item in sublist]
 
@@ -256,7 +282,7 @@ class MasterVehicleDetection():
         # Add heat to each box in box list
         self.heat_map.add_heat(bound_box_list_all)
         # Apply threshold to help remove false positives
-        heat = self.heat_map.apply_threshold(2)
+        heat = self.heat_map.apply_threshold(4)
         # Visualize the heatmap when displaying
         heat_map_img = np.clip(heat, 0, 255)
         # Find final boxes from heatmap using label function
@@ -265,10 +291,25 @@ class MasterVehicleDetection():
         self.last_heat_img = heat_map_img
 
         # self.save_images(img, heat_map_img, self.num_frame)
-        # self.num_frame += 1
+        self.num_frame += 1
 
         out_img = draw_labeled_bboxes(np.copy(img), labels)
-        return out_img
+
+        # -------------------------------------------------
+        # DEBUGGING
+        # -------------------------------------------------
+        debug_plot.add_images(title='Summary',
+                              img_1=cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB), subtitle_1='Original img',
+                              img_2=self.heat_map.get_heat_map_as_RGB(), subtitle_2='Heat map',
+                              convert=False)
+        # debug_plot.show_plot()
+
+        out_img_w_boxes = draw_boxes(out_img, bound_box_list_all)
+        img_w_overlay = add_thumbnail(out_img, out_img_w_boxes, x_offset=480)
+        img_w_overlay = add_thumbnail(img_w_overlay, self.heat_map.get_heat_map_as_RGB())
+
+        # return out_img
+        return img_w_overlay
 
     def save_images(self, img, heatmap, frame):
         # plt.figure()
@@ -367,17 +408,13 @@ def draw_boxes(img, bbox_list):
         cv2.rectangle(draw_img, box[0], box[1], (255, 0, 0), 6)
     return draw_img
 
-def add_thumbnail(img, thumb_img, scale=0.9, x_offset=10, y_offset=10):
+def add_thumbnail(img, thumb_img, scale=0.3, x_offset=2, y_offset=2):
     draw_img = np.copy(img)
 
     if thumb_img.ndim == 2:
         thumb_img = cv2.cvtColor((thumb_img / thumb_img.max()).astype('float32'), cv2.COLOR_GRAY2BGR)
 
     resized_thumb_img = cv2.resize(thumb_img, (0, 0), fx=scale, fy=scale)
-
-    # x = cv2.cvtColor(resized_thumb_img, cv2.COLOR_GRAY2RGB)
-    plt.imshow(resized_thumb_img)
-    plt.show()
 
     draw_img[y_offset:y_offset + resized_thumb_img.shape[0], x_offset:x_offset + resized_thumb_img.shape[1]] = resized_thumb_img
     return draw_img
@@ -408,15 +445,15 @@ def run_for_images():
         # Save image
         cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
 
-        fig = plt.figure()
-        plt.subplot(121)
-        plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
-        plt.title('Car Positions')
-        plt.subplot(122)
-        plt.imshow(veh_det.last_heat_img, cmap='hot')
-        plt.title('Heat Map')
-        fig.tight_layout()
-        plt.show()
+        # fig = plt.figure()
+        # plt.subplot(121)
+        # plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+        # plt.title('Car Positions')
+        # plt.subplot(122)
+        # plt.imshow(veh_det.last_heat_img, cmap='hot')
+        # plt.title('Heat Map')
+        # fig.tight_layout()
+        # plt.show()
 
 def clear_folder(folder):
     for the_file in os.listdir(folder):

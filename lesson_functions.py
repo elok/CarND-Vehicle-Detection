@@ -1,8 +1,13 @@
-import matplotlib.image as mpimg
 import numpy as np
 import cv2
 from skimage.feature import hog
-
+import matplotlib.pyplot as plt
+import matplotlib
+# Make sure that we are using QT5
+matplotlib.use('Qt5Agg')
+from PyQt5 import QtWidgets
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 # Define a function to return HOG features and visualization
 def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, feature_vec=True):
@@ -180,3 +185,76 @@ def draw_labeled_bboxes(img, labels):
     # Return the image
     return img
 
+class ScrollableWindow(QtWidgets.QMainWindow):
+    def __init__(self, fig):
+        self.qapp = QtWidgets.QApplication([])
+
+        QtWidgets.QMainWindow.__init__(self)
+        self.widget = QtWidgets.QWidget()
+        self.setCentralWidget(self.widget)
+        self.widget.setLayout(QtWidgets.QVBoxLayout())
+        self.widget.layout().setContentsMargins(0,0,0,0)
+        self.widget.layout().setSpacing(0)
+
+        self.fig = fig
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.draw()
+        self.scroll = QtWidgets.QScrollArea(self.widget)
+        self.scroll.setWidget(self.canvas)
+
+        self.nav = NavigationToolbar(self.canvas, self.widget)
+        self.widget.layout().addWidget(self.nav)
+        self.widget.layout().addWidget(self.scroll)
+
+        self.show()
+        self.qapp.exec_()
+        # exit(self.qapp.exec_())
+
+class DebugPlot():
+
+    def __init__(self, title):
+        self.title = title
+        # self.columns = columns
+        self.list_of_images = []
+
+    def add_images(self, title, img_1, subtitle_1, img_2, subtitle_2, convert=True):
+        img_1_x = np.copy(img_1)
+        img_2_x = np.copy(img_2)
+        if convert:
+            self.list_of_images.append((title,
+                                   (cv2.cvtColor(img_1_x, cv2.COLOR_BGR2RGB), subtitle_1),
+                                   (cv2.cvtColor(img_2_x, cv2.COLOR_BGR2RGB), subtitle_2)))
+        else:
+            self.list_of_images.append((title,
+                              (img_1_x, subtitle_1),
+                              (img_2_x, subtitle_2)))
+
+    def show_plot(self):
+        columns = 2
+        rows = len(self.list_of_images)
+
+        fig, axes = plt.subplots(rows, columns, figsize=(12, 10))
+        fig.subplots_adjust(hspace=0.4, wspace=0.05)
+
+        curr_row = 0
+        for img_tuple in self.list_of_images:
+            # axes[curr_row].set_title(img_tuple[0])
+            # axes[curr_row][0].set_ylabel(curr_row, rotation=0, size='large')
+
+            axes[curr_row][0].imshow(img_tuple[1][0])
+            axes[curr_row][0].set_title(img_tuple[1][1], fontsize=11)
+
+            axes[curr_row][1].imshow(img_tuple[2][0])
+            axes[curr_row][1].set_title(img_tuple[2][1], fontsize=11)
+
+            curr_row += 1
+
+        plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+        plt.suptitle(self.title)
+        # plt.show()
+
+        # pass the figure to the custom window
+        a = ScrollableWindow(fig)
+
+    def save(self, path):
+        plt.savefig(path)
