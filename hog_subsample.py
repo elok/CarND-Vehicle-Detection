@@ -76,7 +76,7 @@ class MasterVehicleDetection():
             # plt.savefig('heat_maps/heatmap_{0}.jpg'.format(frame))
 
     def find_cars(self, img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size,
-                  hist_bins, hog_channel, debug_draw_box=False):
+                  hist_bins, hog_channel):
         """
         Define a single function that can extract features using hog sub-sampling and make predictions
         :param img:
@@ -305,7 +305,7 @@ class MasterVehicleDetection():
         # debug_plot.show_plot()
 
         out_img_w_boxes = draw_boxes(out_img, bound_box_list_all)
-        img_w_overlay = add_thumbnail(out_img, out_img_w_boxes, x_offset=440)
+        img_w_overlay = add_thumbnail(out_img, out_img_w_boxes, x_offset=420)
         img_w_overlay = add_thumbnail(img_w_overlay, self.heat_map.get_heat_map_as_RGB())
 
         # return out_img
