@@ -191,8 +191,8 @@ class MasterVehicleDetection():
         ystart = 300
         ystop = 720
         scale = 1.0
-        bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell, cell_per_block,
-                              spatial_size, hist_bins, hog_channel=hog_channel)
+        bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
+                                        cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
 
@@ -205,8 +205,7 @@ class MasterVehicleDetection():
         ystop = 720
         scale = 1.5
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
+                                   cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
 
@@ -220,8 +219,7 @@ class MasterVehicleDetection():
         ystop = 720
         scale = 1
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
+                                   cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
 
@@ -235,8 +233,7 @@ class MasterVehicleDetection():
         ystop = 720
         scale = 1
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
+                                   cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
 
@@ -249,8 +246,7 @@ class MasterVehicleDetection():
         ystop = 720
         scale = 1.5
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
+                                   cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
 
@@ -263,8 +259,7 @@ class MasterVehicleDetection():
         ystop = 720
         scale = 2.0
         bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-                                   cell_per_block,
-                                   spatial_size, hist_bins, hog_channel=hog_channel)
+                                   cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
         if bbox_list_curr:
             bound_box_list_all.append(bbox_list_curr)
 
