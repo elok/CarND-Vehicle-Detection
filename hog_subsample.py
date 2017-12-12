@@ -25,10 +25,7 @@ from scipy.ndimage.measurements import label
 # from heat_map import HeatMap
 
 COLOR_SPACE = 'YUV'  # RGB, HSV, LUV, HLS, YUV or YCrCb    # Test Accuracy of SVC =  0.9932
-CONVERT_COLOR_SPACE = 'BGR2YUV'
-
-# COLOR_SPACE = 'HLS'  # Test Accuracy of SVC =  0.9918
-# CONVERT_COLOR_SPACE = 'BGR2HLS'
+CONVERT_COLOR_SPACE = 'RGB2YUV'
 
 # Min and max in y to search in slide_window()
 # ystart = 400
@@ -56,9 +53,9 @@ class MasterVehicleDetection():
     def add_bbox(self, bbox):
         self.prev_bounding_boxes.append(bbox)
         BOUNDING_BOXES_TO_KEEP = 15
-        if len(self.prev_bounding_boxes) > 10:
+        if len(self.prev_bounding_boxes) > BOUNDING_BOXES_TO_KEEP:
             # throw out oldest rectangle set(s)
-            self.prev_bounding_boxes = self.prev_bounding_boxes[len(self.prev_bounding_boxes) - 15:]
+            self.prev_bounding_boxes = self.prev_bounding_boxes[len(self.prev_bounding_boxes) - BOUNDING_BOXES_TO_KEEP:]
 
     def get_heat_map_as_RGB(self, heat_map, img):
         h = np.zeros_like(img).astype(np.float)
@@ -303,11 +300,11 @@ class MasterVehicleDetection():
         if len(bound_box_list_all) > 0:
             self.add_bbox(bound_box_list_all)
 
-            heat_map_img = np.zeros_like(img[:, :, 0])
         for rect_set in self.prev_bounding_boxes:
+            heat_map_img = np.zeros_like(img[:, :, 0])
             heat_map_img = add_heat(heat_map_img, rect_set)
-            # heat_map_img = apply_threshold(heat_map_img, 1 + len(self.prev_bounding_boxes) // 2)
-            heat_map_img = apply_threshold(heat_map_img, 5)
+            heat_map_img = apply_threshold(heat_map_img, 1 + len(self.prev_bounding_boxes) // 2)
+            # heat_map_img = apply_threshold(heat_map_img, 5)
 
         # # Add heat to each box in box list
         # self.heat_map.add_heat(bound_box_list_all)
@@ -513,8 +510,8 @@ def run_for_video():
         svc = dist_pickle["svc"]
         X_scaler = dist_pickle["scaler"]
 
-    video_filename = 'test_video'
-    # video_filename = 'project_video'
+    # video_filename = 'test_video'
+    video_filename = 'project_video'
     video_output_filename = video_filename + '_output.mp4'
 
     # clip1 = VideoFileClip(video_filename + '.mp4').subclip(40, 45) # shadow

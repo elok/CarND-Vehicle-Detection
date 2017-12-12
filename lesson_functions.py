@@ -179,12 +179,16 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
 def convert_color(img, conv='RGB2YCrCb'):
     if conv == 'RGB2YCrCb':
         return cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
-    if conv == 'BGR2YCrCb':
+    elif conv == 'BGR2YCrCb':
         return cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-    if conv == 'RGB2LUV':
+    elif conv == 'RGB2LUV':
         return cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
-    if conv == 'BGR2YUV':
+    elif conv == 'BGR2YUV':
         return cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+    elif conv == 'RGB2YUV':
+        return cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
+    else:
+        raise Exception('Invalid conv')
 
 def draw_labeled_bboxes(img, labels):
     # Iterate through all detected cars
