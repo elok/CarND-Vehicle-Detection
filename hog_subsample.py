@@ -303,8 +303,8 @@ class MasterVehicleDetection():
         for rect_set in self.prev_bounding_boxes:
             heat_map_img = np.zeros_like(img[:, :, 0])
             heat_map_img = add_heat(heat_map_img, rect_set)
-            heat_map_img = apply_threshold(heat_map_img, 1 + len(self.prev_bounding_boxes) // 2)
-            # heat_map_img = apply_threshold(heat_map_img, 5)
+            # heat_map_img = apply_threshold(heat_map_img, 1 + len(self.prev_bounding_boxes) // 2)
+            heat_map_img = apply_threshold(heat_map_img, 3)
 
         # # Add heat to each box in box list
         # self.heat_map.add_heat(bound_box_list_all)
