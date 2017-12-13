@@ -478,8 +478,10 @@ def run_for_images():
 
         out_img = veh_det.process_image(img)
 
+        out_img_BGR = cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR)
+
         # Save image
-        cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img)  # BGR
+        cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img_BGR)  # BGR
 
         # fig = plt.figure()
         # plt.subplot(121)
