@@ -299,10 +299,14 @@ class MasterVehicleDetection():
         # -------------------------------------------------
         if len(bound_box_list_all) > 0:
             self.add_bbox(bound_box_list_all)
-            heat_map_img = np.zeros_like(img[:, :, 0])
 
+        heat_map_img = np.zeros_like(img[:, :, 0])
         for rect_set in self.prev_bounding_boxes:
-            heat_map_img = add_heat(heat_map_img, rect_set)
+            try:
+                heat_map_img = add_heat(heat_map_img, rect_set)
+            except:
+                i = 3
+                pass
             # heat_map_img = apply_threshold(heat_map_img, 1 + len(self.prev_bounding_boxes) // 2)
             heat_map_img = apply_threshold(heat_map_img, 4)
 
@@ -510,8 +514,8 @@ def run_for_video():
         svc = dist_pickle["svc"]
         X_scaler = dist_pickle["scaler"]
 
-    video_filename = 'test_video'
-    # video_filename = 'project_video'
+    # video_filename = 'test_video'
+    video_filename = 'project_video'
     video_output_filename = video_filename + '_output.mp4'
 
     # clip1 = VideoFileClip(video_filename + '.mp4').subclip(40, 45) # shadow
