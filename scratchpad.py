@@ -9,8 +9,9 @@ from sklearn.preprocessing import StandardScaler
 # NOTE: the next import is only valid
 # for scikit-learn version <= 0.17
 # if you are using scikit-learn >= 0.18 then use this:
-# from sklearn.model_selection import train_test_split
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
+# from sklearn.cross_validation import train_test_split
+from lesson_functions import *
 
 def test_histogram():
     image = cv2.imread(r'vehicles/GTI_Far/image0001.png')
@@ -107,29 +108,51 @@ def test_hog():
     cars = glob.glob(r'vehicles/GTI_Far/*.png')
     notcars = glob.glob(r'non-vehicles/GTI/*.png')
 
-    # Generate a random index to look at a car image
-    ind = np.random.randint(0, len(cars))
-    # Read in the image
-    image = mpimg.imread(cars[ind])
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     # Define HOG parameters
-    orient = 9
-    pix_per_cell = 8
-    cell_per_block = 2
-    # Call our function with vis=True to see an image output
-    features, hog_image = get_hog_features(gray, orient,
-                                           pix_per_cell, cell_per_block,
-                                           vis=True, feature_vec=False)
+    orient = 11  # HOG orientations
+    pix_per_cell = 16  # HOG pixels per cell
+    cell_per_block = 2  # HOG cells per block
 
-    # Plot the examples
-    fig = plt.figure()
-    plt.subplot(121)
-    plt.imshow(image, cmap='gray')
-    plt.title('Example Car Image')
-    plt.subplot(122)
-    plt.imshow(hog_image, cmap='gray')
-    plt.title('HOG Visualization')
-    plt.show()
+    for idx in range(0, 5):
+        # Generate a random index to look at a car image
+        ind = np.random.randint(0, len(cars))
+
+        # Read in the image
+        car_image = mpimg.imread(cars[ind])
+        car_gray = cv2.cvtColor(car_image, cv2.COLOR_RGB2GRAY)
+        notcar_image = mpimg.imread(notcars[ind])
+        notcar_gray = cv2.cvtColor(notcar_image, cv2.COLOR_RGB2GRAY)
+
+
+        # Call our function with vis=True to see an image output
+        car_features, car_hog_image = get_hog_features(car_gray, orient,
+                                                       pix_per_cell, cell_per_block,
+                                                       vis=True, feature_vec=False)
+        notcar_features, notcar_hog_image = get_hog_features(notcar_gray, orient,
+                                                             pix_per_cell, cell_per_block,
+                                                             vis=True, feature_vec=False)
+
+        # Plot the Car examples
+        fig = plt.figure()
+        plt.subplot(121)
+        plt.imshow(car_image, cmap='gray')
+        plt.title('Car Image')
+        plt.subplot(122)
+        plt.imshow(car_hog_image, cmap='gray')
+        plt.title('Car HOG Visualization')
+        plt.savefig('output_images/car_hog_visualization_{0}.jpg'.format(idx))
+        # plt.show()
+
+        # Plot the Not Car examples
+        fig = plt.figure()
+        plt.subplot(121)
+        plt.imshow(notcar_image, cmap='gray')
+        plt.title('Not Car Image')
+        plt.subplot(122)
+        plt.imshow(notcar_hog_image, cmap='gray')
+        plt.title('Not Car HOG Visualization')
+        plt.savefig('output_images/not_car_hog_visualization_{0}.jpg'.format(idx))
+        # plt.show()
 
 # Define a function to compute binned color features
 def bin_spatial(img, size=(32, 32)):
@@ -244,5 +267,5 @@ if __name__ == '__main__':
     # test_bin_spatial()
     # test_plot3d()
     # test_datalook()
-    # test_hog()
-    test_extract_features()
+    test_hog()
+    # test_extract_features()
