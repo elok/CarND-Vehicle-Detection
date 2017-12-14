@@ -52,7 +52,7 @@ class MasterVehicleDetection():
 
     def add_bbox(self, bbox):
         self.prev_bounding_boxes.append(bbox)
-        BOUNDING_BOXES_TO_KEEP = 10
+        BOUNDING_BOXES_TO_KEEP = 15
         if len(self.prev_bounding_boxes) > BOUNDING_BOXES_TO_KEEP:
             # throw out oldest rectangle set(s)
             self.prev_bounding_boxes = self.prev_bounding_boxes[len(self.prev_bounding_boxes) - BOUNDING_BOXES_TO_KEEP:]
@@ -526,8 +526,8 @@ def run_for_video():
     video_filename = 'project_video'
     video_output_filename = video_filename + '_output.mp4'
 
-    clip1 = VideoFileClip(video_filename + '.mp4').subclip(20, 45)
-    # clip1 = VideoFileClip(video_filename + '.mp4')
+    # clip1 = VideoFileClip(video_filename + '.mp4').subclip(20, 45)
+    clip1 = VideoFileClip(video_filename + '.mp4')
 
     veh_det = MasterVehicleDetection(svc=svc, X_scaler=X_scaler)
 
