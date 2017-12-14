@@ -39,7 +39,17 @@ I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an 
 
 ![alt text][image1]
 
-<img src="./camera_cal/calibration2.jpg" width="50%" height="50%">
+<img src="./output_images/car_hog_visualization_0.jpg">
+<img src="./output_images/car_hog_visualization_1.jpg">
+<img src="./output_images/car_hog_visualization_2.jpg">
+<img src="./output_images/car_hog_visualization_3.jpg">
+<img src="./output_images/car_hog_visualization_4.jpg">
+
+<img src="./output_images/not_car_hog_visualization_0.jpg">
+<img src="./output_images/not_car_hog_visualization_1.jpg">
+<img src="./output_images/not_car_hog_visualization_2.jpg">
+<img src="./output_images/not_car_hog_visualization_3.jpg">
+<img src="./output_images/not_car_hog_visualization_4.jpg">
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
@@ -47,6 +57,9 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 
 ![alt text][image2]
+
+<img src="./output_images/car_hog_visualization_1.jpg" width="50%" height="50%">
+ 
 
 #### 2. Explain how you settled on your final choice of HOG parameters.
 
