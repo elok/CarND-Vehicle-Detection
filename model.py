@@ -276,25 +276,6 @@ class MasterVehicleDetection():
                               img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
                               img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
 
-        # ystart = 400
-        # ystop = 820
-        # scale = 3.0
-        # bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-        #                            cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
-        # bound_box_list_all.append(bbox_list_curr)
-        #
-        # img_w_car_bbox = draw_boxes(img, bbox_list_curr)
-        # debug_plot.add_images(title='large cars on horizon - scale 2.0 : frame: {0}'.format(self.num_frame),
-        #                       img_1=img_w_car_bbox, subtitle_1='img_w_car_bbox',
-        #                       img_2=self.last_img_with_all_searched_bound_box, subtitle_2='img_w_all_bbox')
-        #
-        # ystart = 300
-        # ystop = 820
-        # scale = 3.5
-        # bbox_list_curr = self.find_cars(img, ystart, ystop, scale, self.svc, self.X_scaler, orient, pix_per_cell,
-        #                                 cell_per_block, spatial_size, hist_bins, hog_channel=hog_channel)
-        # bound_box_list_all.append(bbox_list_curr)
-
         bound_box_list_all = [item for sublist in bound_box_list_all for item in sublist]
 
         # -------------------------------------------------
@@ -384,11 +365,6 @@ def train_and_return_svc(spatial, histbin, color_space, hog_channel, orient, pix
     images = glob.glob('non-vehicles/**/*.png', recursive=True)  # noncars
     for image in images:
         notcars.append(image)
-
-    # TODO play with these values to see how your classifier
-    # performs under different binning scenarios
-    # spatial = 32
-    # histbin = 32
 
     car_features = extract_features(cars, color_space=color_space, spatial_size=spatial, hist_bins=histbin,
                                     hog_channel=hog_channel, orient=orient, pix_per_cell=pix_per_cell,
@@ -535,5 +511,5 @@ def run_for_video():
     white_clip.write_videofile(video_output_filename, audio=False)
 
 if __name__ == '__main__':
-    # run_for_images()
-    run_for_video()
+    run_for_images()
+    # run_for_video()
