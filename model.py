@@ -342,7 +342,7 @@ class MasterVehicleDetection():
         axes[1].set_xticks([])
         axes[1].set_yticks([])
 
-        plt.savefig('heat_maps/heatmap_{0}.jpg'.format(frame))
+        plt.savefig('heat_maps/heatmap_{0}.jpg'.format(frame), bbox_inches='tight')
 
 def train_and_return_svc(spatial, histbin, color_space, hog_channel, orient, pix_per_cell, cell_per_block):
     """
@@ -454,20 +454,21 @@ def run_for_images():
 
         out_img = veh_det.process_image(img)
 
-        out_img_BGR = cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR)
-
         # Save image
-        cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img_BGR)  # BGR
+        # out_img_BGR = cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR)
+        # cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img_BGR)  # BGR
 
-        # fig = plt.figure()
-        # plt.subplot(121)
-        # plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
-        # plt.title('Car Positions')
-        # plt.subplot(122)
-        # plt.imshow(veh_det.last_heat_img, cmap='hot')
-        # plt.title('Heat Map')
-        # fig.tight_layout()
+        fig = plt.figure()
+        plt.subplot(121)
+        plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+        plt.title('Car Positions')
+        plt.subplot(122)
+        plt.imshow(veh_det.last_heat_img, cmap='hot')
+        plt.title('Heat Map')
+        fig.tight_layout()
         # plt.show()
+
+        # plt.savefig('output_images/heatmap_example_3.jpg', bbox_inches='tight')
 
         # break
 
