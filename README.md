@@ -77,6 +77,8 @@ I decided to search random window positions at random scales all over the image 
 
 ![alt text][image3]
 
+<img src="./output_images/car_hog_visualization_0.jpg">
+
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
 Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
@@ -97,6 +99,13 @@ I recorded the positions of positive detections in each frame of the video.  Fro
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
 ### Here are six frames and their corresponding heatmaps:
+
+<img src="./output_images/heatmap_example_1.jpg">
+<img src="./output_images/heatmap_example_2.jpg">
+<img src="./output_images/heatmap_example_3.jpg">
+<img src="./output_images/heatmap_example_4.jpg">
+<img src="./output_images/heatmap_example_5.jpg">
+<img src="./output_images/heatmap_example_6.jpg">
 
 ![alt text][image5]
 
