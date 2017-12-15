@@ -33,7 +33,7 @@ You're reading it!
 
 #### 1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in line 12 of file lesson_functions.py. The function is called get_hog_features().   
 
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
@@ -41,7 +41,7 @@ I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an 
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 
-Here is an example using the `YCrCb` color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
+Here is an example using the `YUV` color space and HOG parameters of `orientations=11`, `pixels_per_cell=(16, 16)` and `cells_per_block=(2, 2)`:
 
 <img src="./output_images/car_hog_visualization_0.jpg" width="50%" height="50%">
 <img src="./output_images/car_hog_visualization_1.jpg" width="50%" height="50%">
@@ -57,11 +57,18 @@ Here is an example using the `YCrCb` color space and HOG parameters of `orientat
 
 #### 2. Explain how you settled on your final choice of HOG parameters.
 
-I tried various combinations of parameters and...
+I tried various combinations of parameters and experimented with the results. Once, I have a good feel of what parameters provide me with good results, I like to go on slack and the discussion forums to see what others have come up with. A combination of the two gave me the best results.
 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using...
+I trained a linear SVM in file model.py inside a function called train_and_return_svc(). Given all the necessary parameters, I do the following:
+
+1 - Read all the car and non-car images.
+2 - I pass the image into a function called extract_features() which first converts the image to the specified color space (YUV). Then it resizes the image to compute the binned color features. Then it calls color_hist() which generates a histogram out of all three channels of the image. And lastly, it calls the function get_hog_features() which returns the hog features of all three channels as well.
+3 - The feature set for both the car and non-car are then stacked and normalize using sklearn's StandardScaler.
+4 - Once the features are normalized, we label the cars with 1's and non-cars with 0's. 
+5 - The data is split up into randomized training and test sets.
+6 - The training set is then passed into the sklearn's LinearSVC classifier.
 
 ### Sliding Window Search
 
@@ -78,6 +85,9 @@ I decided to search random window positions at random scales all over the image 
 Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
 
 ![alt text][image4]
+
+<img src="./output_images/car_hog_visualization_0.jpg">
+
 ---
 
 ### Video Implementation
