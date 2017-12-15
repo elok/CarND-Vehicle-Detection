@@ -63,20 +63,18 @@ I tried various combinations of parameters and experimented with the results. On
 
 I trained a linear SVM in file model.py inside a function called train_and_return_svc(). Given all the necessary parameters, I do the following:
 
-1 - Read all the car and non-car images.
-2 - I pass the image into a function called extract_features() which first converts the image to the specified color space (YUV). Then it resizes the image to compute the binned color features. Then it calls color_hist() which generates a histogram out of all three channels of the image. And lastly, it calls the function get_hog_features() which returns the hog features of all three channels as well.
-3 - The feature set for both the car and non-car are then stacked and normalize using sklearn's StandardScaler.
-4 - Once the features are normalized, we label the cars with 1's and non-cars with 0's. 
-5 - The data is split up into randomized training and test sets.
-6 - The training set is then passed into the sklearn's LinearSVC classifier.
+1. Read all the car and non-car images.
+2. I pass the image into a function called extract_features() which first converts the image to the specified color space (YUV). Then it resizes the image to compute the binned color features. Then it calls color_hist() which generates a histogram out of all three channels of the image. And lastly, it calls the function get_hog_features() which returns the hog features of all three channels as well.
+3. The feature set for both the car and non-car are then stacked and normalize using sklearn's StandardScaler.
+4. Once the features are normalized, we label the cars with 1's and non-cars with 0's. 
+5. The data is split up into randomized training and test sets.
+6. The training set is then passed into the sklearn's LinearSVC classifier.
 
 ### Sliding Window Search
 
 #### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I decided to search random window positions at random scales all over the image and came up with this (ok just kidding I didn't actually ;):
-
-![alt text][image3]
+My code for sliding window search is located in file model.py under function process_image() (code line starting at 212). I took the advice of the lessons to not search the sky and to search certain scales in only certain areas of the image -- so small scales around the center of the image and larger scales towards the bottom of the image. This took alot of trial and error. I had to output alot of visuals to help debug where I was actually searching and if it made any sense.
 
 <img src="./output_images/window_search_1.jpg">
 <img src="./output_images/window_search_2.jpg">
@@ -87,7 +85,33 @@ I decided to search random window positions at random scales all over the image 
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  Here are some example images:
+Ultimately I searched on 6 scales using YUV 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result:
+
+ystart = 400
+ystop = 600
+scale = 0.5
+
+ystart = 400
+ystop = 600
+scale = 1.0
+
+ystart = 400
+ystop = 600
+scale = 1.3
+
+ystart = 400
+ystop = 600
+scale = 1.5
+
+ystart = 400
+ystop = 720
+scale = 2
+
+ystart = 400
+ystop = 820
+scale = 2.5
+
+Here are some example images:
 
 <img src="./output_images/pipeline_result_1.jpg">
 <img src="./output_images/pipeline_result_2.jpg">
@@ -99,12 +123,12 @@ Ultimately I searched on two scales using YCrCb 3-channel HOG features plus spat
 ### Video Implementation
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (somewhat wobbly or unstable bounding boxes are ok as long as you are identifying the vehicles most of the time with minimal false positives.)
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./project_video_output.mp4)
 
 
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+I recorded the positions of positive detections in each frame of the video.  From the positive detections I saved down the 15 most recent bounding boxes and created a heatmap and then thresholded that map by 2.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected. The code to save the 15 most recent bounding boxes is located in model.py add_bbox() (line 53).
 
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
@@ -117,19 +141,16 @@ Here's an example result showing the heatmap from a series of frames of video, t
 <img src="./output_images/heatmap_example_5.jpg">
 <img src="./output_images/heatmap_example_6.jpg">
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
-
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
-
-
-
 ---
 
 ### Discussion
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+Hyperparameter Tuning - tuning the parameters were mostly through trial and error. I would like to explore using GridSearchCV and RandomizedSearchCV. 
 
+Debugging - it was tough at times to see what was going on with my heatmaps and window searches. I was able to add an inset/overlay on top of my output and that helped tremendously to debug my issues.
+
+Caching / False Positives - I still have false positives. I'm not really sure the best way to fix this for good. Some thoughts are tweaking the amount of previous bounding boxes to cache. Another thought is some way to average the heat maps across frames. Maybe one way is to use deep learning instead of SVC to classify a car vs non-car. I'm curious to see if that would improve the results.
+
+Integrate Advance Lane Finding - I'd love to integrate project 4 with project 5 and be able to see both the lane lines highlighted and cars on the road identified.
