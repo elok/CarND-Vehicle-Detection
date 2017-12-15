@@ -63,12 +63,12 @@ I tried various combinations of parameters and experimented with the results. On
 
 I trained a linear SVM in file model.py inside a function called train_and_return_svc(). Given all the necessary parameters, I do the following:
 
-1 - Read all the car and non-car images.
-2 - I pass the image into a function called extract_features() which first converts the image to the specified color space (YUV). Then it resizes the image to compute the binned color features. Then it calls color_hist() which generates a histogram out of all three channels of the image. And lastly, it calls the function get_hog_features() which returns the hog features of all three channels as well.
-3 - The feature set for both the car and non-car are then stacked and normalize using sklearn's StandardScaler.
-4 - Once the features are normalized, we label the cars with 1's and non-cars with 0's. 
-5 - The data is split up into randomized training and test sets.
-6 - The training set is then passed into the sklearn's LinearSVC classifier.
+1. Read all the car and non-car images.
+2. I pass the image into a function called extract_features() which first converts the image to the specified color space (YUV). Then it resizes the image to compute the binned color features. Then it calls color_hist() which generates a histogram out of all three channels of the image. And lastly, it calls the function get_hog_features() which returns the hog features of all three channels as well.
+3. The feature set for both the car and non-car are then stacked and normalize using sklearn's StandardScaler.
+4. Once the features are normalized, we label the cars with 1's and non-cars with 0's. 
+5. The data is split up into randomized training and test sets.
+6. The training set is then passed into the sklearn's LinearSVC classifier.
 
 ### Sliding Window Search
 
@@ -147,5 +147,10 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+Hyperparameter Tuning - tuning the parameters were mostly through trial and error. I would like to explore using GridSearchCV and RandomizedSearchCV. 
 
+Debugging - it was tough at times to see what was going on with my heatmaps and window searches. I was able to add an inset/overlay on top of my output and that helped tremendously to debug my issues.
+
+Caching / False Positives - I still have false positives. I'm not really sure the best way to fix this for good. Some thoughts are tweaking the amount of previous bounding boxes to cache. Another thought is some way to average the heat maps across frames. Maybe one way is to use deep learning instead of SVC to classify a car vs non-car. I'm curious to see if that would improve the results.
+
+Integrate Advance Lane Finding - I'd love to integrate project 4 with project 5 and be able to see both the lane lines highlighted and cars on the road identified.
