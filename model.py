@@ -196,6 +196,11 @@ class MasterVehicleDetection():
         return bbox_list
 
     def process_image(self, img):
+        """
+
+        :param img: MUST BE RGB
+        :return:
+        """
         bound_box_list_all = []
         debug_plot = DebugPlot(title='Frame: {0}'.format(self.num_frame))
 
@@ -454,13 +459,9 @@ def run_for_images():
 
         out_img = veh_det.process_image(img)
 
-        # Save image
-        # out_img_BGR = cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR)
-        # cv2.imwrite(os.path.join(r'output_images/', os.path.split(img_path)[1]), out_img_BGR)  # BGR
-
         fig = plt.figure()
         plt.subplot(121)
-        plt.imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+        plt.imshow(out_img)
         plt.title('Car Positions')
         plt.subplot(122)
         plt.imshow(veh_det.last_heat_img, cmap='hot')
