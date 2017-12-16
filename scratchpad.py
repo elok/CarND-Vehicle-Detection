@@ -140,7 +140,7 @@ def test_hog():
         plt.subplot(122)
         plt.imshow(car_hog_image, cmap='gray')
         plt.title('Car HOG Visualization')
-        plt.savefig('output_images/car_hog_visualization_{0}.jpg'.format(idx))
+        plt.savefig('output_images/car_hog_visualization_{0}.jpg'.format(idx), bbox_inches='tight')
         # plt.show()
 
         # Plot the Not Car examples
@@ -151,7 +151,7 @@ def test_hog():
         plt.subplot(122)
         plt.imshow(notcar_hog_image, cmap='gray')
         plt.title('Not Car HOG Visualization')
-        plt.savefig('output_images/not_car_hog_visualization_{0}.jpg'.format(idx))
+        plt.savefig('output_images/not_car_hog_visualization_{0}.jpg'.format(idx), bbox_inches='tight')
         # plt.show()
 
 # Define a function to compute binned color features
